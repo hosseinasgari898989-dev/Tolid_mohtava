@@ -47,7 +47,7 @@ When a video is finished:
 
 1. MP4 is rendered.
 2. Caption TXT is created.
-3. Both files are uploaded to GitHub Releases.
+3. The MP4, caption and credits files are uploaded to GitHub Releases.
 4. The video status becomes done.
 5. Used Pexels clip IDs are saved.
 6. Changes are committed to main.
