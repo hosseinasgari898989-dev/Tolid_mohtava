@@ -125,12 +125,13 @@ def main():
         print("No assets/music MP3 found; using the procedural ambient pad.")
 
     filters = [
-        f"[0:a]apad=pad_dur=1.5,atrim=duration={duration:.3f},asetpts=PTS-STARTPTS[voice]",
+        f"[0:a]apad=pad_dur=1.5,atrim=duration={duration:.3f},asetpts=PTS-STARTPTS,"
+        "asplit=2[voice_sc][voice_mix]",
         f"[{music_label}]atrim=duration={duration:.3f},asetpts=PTS-STARTPTS,"
         f"afade=t=in:st=0:d=1,afade=t=out:st={duration - 2.0:.3f}:d=2,"
         "volume=0.12[music]",
-        "[music][voice]sidechaincompress=threshold=0.02:ratio=5:attack=20:release=420[ducked]",
-        "[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0[mix0]",
+        "[music][voice_sc]sidechaincompress=threshold=0.02:ratio=5:attack=20:release=420[ducked]",
+        "[voice_mix][ducked]amix=inputs=2:duration=first:dropout_transition=0[mix0]",
     ]
 
     sfx_labels = []
