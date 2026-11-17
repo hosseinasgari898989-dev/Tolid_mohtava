@@ -299,18 +299,19 @@ const WordSubtitles = ({ words, fps }) => {
     return null;
   }
 
-  const first = Math.max(0, activeIndex - 2);
-  const visibleWords = words.slice(first, Math.min(words.length, activeIndex + 3));
+  const first = Math.max(0, activeIndex - 1);
+  const visibleWords = words.slice(first, Math.min(words.length, activeIndex + 2));
 
   return (
     <div
       dir="rtl"
       style={{
         position: "absolute",
-        top: "61%",
+        top: "60%",
         left: 58,
         right: 58,
-        minHeight: 170,
+        height: "10%",
+        overflow: "hidden",
         display: "flex",
         flexWrap: "wrap",
         justifyContent: "center",
@@ -319,9 +320,9 @@ const WordSubtitles = ({ words, fps }) => {
         gap: "4px 15px",
         padding: 0,
         ...baseFont,
-        fontSize: 58,
+        fontSize: 56,
         fontWeight: 900,
-        lineHeight: 1.6,
+        lineHeight: 1.45,
         WebkitTextStroke: "2.5px #07101f",
         paintOrder: "stroke fill",
         textShadow: "0 4px 14px rgba(0,0,0,.98), 0 0 24px rgba(0,0,0,.8)"
