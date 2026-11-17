@@ -142,9 +142,7 @@ const KineticText = ({ scene, isHook }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const words = scene.textOnScreen.trim().split(/\s+/u);
-  const fontSize = isHook
-    ? interpolate(frame, [0, 45], [112, 88], clamp)
-    : 90;
+  const fontSize = isHook ? 112 : 90;
   const highlight = normalizeWord(scene.highlight || "");
 
   return (
@@ -300,7 +298,7 @@ const WordSubtitles = ({ words, fps }) => {
   }
 
   const first = Math.max(0, activeIndex - 1);
-  const visibleWords = words.slice(first, Math.min(words.length, activeIndex + 2));
+  const visibleWords = words.slice(first, activeIndex + 1);
 
   return (
     <div
