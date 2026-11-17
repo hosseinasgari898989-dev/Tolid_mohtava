@@ -1,0 +1,7 @@
+node_modules/
+out/
+public/audio.mp3
+public/words.json
+public/voiceover.txt
+public/clips/
+.DS_Store

@@ -1,0 +1,442 @@
+import React from "react";
+
+import {
+  AbsoluteFill,
+  Sequence,
+  interpolate,
+  spring,
+  useCurrentFrame,
+  useVideoConfig,
+  staticFile
+} from "remotion";
+
+import {
+  Audio,
+  Video as RemotionVideo
+} from "@remotion/media";
+
+import "@fontsource/vazirmatn/400.css";
+import "@fontsource/vazirmatn/700.css";
+
+const clamp = {
+  extrapolateLeft: "clamp",
+  extrapolateRight: "clamp"
+};
+
+const baseFont = {
+  fontFamily: "Vazirmatn, sans-serif",
+  direction: "rtl",
+  textAlign: "center",
+  color: "white"
+};
+
+// Template 1: psychology facts.
+const FactsTemplate = ({ text }) => (
+  <div style={baseFont}>
+    <div style={{
+      fontSize: 34,
+      color: "#FFE082",
+      marginBottom: 24
+    }}>
+      دانستنی روان‌شناسی
+    </div>
+
+    <div style={{
+      fontSize: 64,
+      fontWeight: 700,
+      lineHeight: 1.5,
+      textShadow: "0 4px 18px #000"
+    }}>
+      {text}
+    </div>
+  </div>
+);
+
+// Template 2: numbered lists.
+const ListTemplate = ({ text, index }) => (
+  <div style={baseFont}>
+    <div style={{
+      fontSize: 38,
+      color: "#FFE082",
+      marginBottom: 22
+    }}>
+      نکته {index + 1}
+    </div>
+
+    <div style={{
+      fontSize: 62,
+      fontWeight: 700,
+      lineHeight: 1.5,
+      textShadow: "0 4px 18px #000"
+    }}>
+      {text}
+    </div>
+  </div>
+);
+
+// Template 3: questions.
+const QuestionTemplate = ({ text }) => (
+  <div style={{
+    ...baseFont,
+    background: "rgba(12, 20, 45, 0.55)",
+    border: "2px solid rgba(255,255,255,0.35)",
+    borderRadius: 34,
+    padding: 42
+  }}>
+    <div style={{
+      fontSize: 36,
+      color: "#FFE082",
+      marginBottom: 24
+    }}>
+      یک سؤال برای ذهنت
+    </div>
+
+    <div style={{
+      fontSize: 64,
+      fontWeight: 700,
+      lineHeight: 1.5
+    }}>
+      {text}
+    </div>
+  </div>
+);
+
+const TemplateText = ({ template, text, index }) => {
+  if (template === "list") {
+    return <ListTemplate text={text} index={index} />;
+  }
+
+  if (template === "question") {
+    return <QuestionTemplate text={text} />;
+  }
+
+  return <FactsTemplate text={text} />;
+};
+
+// One scene with zoom and a crossfade transition.
+const SceneLayer = ({
+  scene,
+  index,
+  total,
+  template,
+  duration
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const scale = interpolate(
+    frame,
+    [0, duration],
+    [1, 1.08],
+    clamp
+  );
+
+  const fadeIn = index === 0
+    ? 1
+    : interpolate(frame, [0, 12], [0, 1], clamp);
+
+  const fadeOut = index === total - 1
+    ? 1
+    : interpolate(
+        frame,
+        [Math.max(0, duration - 12), duration],
+        [1, 0],
+        clamp
+      );
+
+  const opacity = Math.min(fadeIn, fadeOut);
+
+  const movement = spring({
+    frame,
+    fps,
+    config: {
+      damping: 17,
+      stiffness: 110
+    }
+  });
+
+  return (
+    <AbsoluteFill style={{ opacity }}>
+      <RemotionVideo
+        src={staticFile(scene.clipPath)}
+        muted
+        loop
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          transform: `scale(${scale})`
+        }}
+      />
+
+      <AbsoluteFill
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.58))"
+        }}
+      />
+
+      <AbsoluteFill
+        style={{
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 80
+        }}
+      >
+        <div
+          dir="rtl"
+          style={{
+            maxWidth: "100%",
+            opacity: movement,
+            transform:
+              `translateY(${(1 - movement) * 35}px) scale(${0.96 + movement * 0.04})`
+          }}
+        >
+          <TemplateText
+            template={template}
+            text={scene.textOnScreen}
+            index={index}
+          />
+        </div>
+      </AbsoluteFill>
+    </AbsoluteFill>
+  );
+};
+
+// Word-by-word subtitles.
+const WordSubtitles = ({ words, fps }) => {
+  const frame = useCurrentFrame();
+  const seconds = frame / fps;
+
+  if (!words || words.length === 0) {
+    return null;
+  }
+
+  let activeIndex = 0;
+
+  for (let i = 0; i < words.length; i++) {
+    if (seconds >= words[i].start) {
+      activeIndex = i;
+    } else {
+      break;
+    }
+  }
+
+  const first = Math.max(0, activeIndex - 3);
+  const visibleWords = words.slice(first, activeIndex + 4);
+
+  return (
+    <div
+      dir="rtl"
+      style={{
+        position: "absolute",
+        bottom: 240,
+        left: 70,
+        right: 70,
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 12,
+        padding: 18,
+        ...baseFont,
+        fontSize: 42,
+        fontWeight: 700,
+        lineHeight: 1.8
+      }}
+    >
+      {visibleWords.map((word, index) => {
+        const realIndex = first + index;
+        const active = realIndex === activeIndex;
+
+        return (
+          <span
+            key={`${word.start}-${index}`}
+            style={{
+              padding: "3px 12px",
+              borderRadius: 12,
+              background: active
+                ? "#FFE082"
+                : "rgba(0,0,0,0.68)",
+              color: active ? "#161616" : "#FFFFFF",
+              unicodeBidi: "isolate"
+            }}
+          >
+            {word.text}
+          </span>
+        );
+      })}
+    </div>
+  );
+};
+
+// Branded intro and outro.
+const BrandCard = ({ title, outro = false }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const scale = spring({
+    frame,
+    fps,
+    config: {
+      damping: 14,
+      stiffness: 100
+    }
+  });
+
+  const opacity = interpolate(
+    frame,
+    [0, 8, 35, 48],
+    [0, 1, 1, 0],
+    clamp
+  );
+
+  return (
+    <AbsoluteFill
+      style={{
+        background: "rgba(7, 12, 32, 0.78)",
+        alignItems: "center",
+        justifyContent: "center",
+        opacity,
+        ...baseFont
+      }}
+    >
+      <div
+        style={{
+          fontSize: 94,
+          fontWeight: 700,
+          transform: `scale(${0.8 + scale * 0.2})`,
+          color: "#FFE082"
+        }}
+      >
+        ذهن‌خوان
+      </div>
+
+      <div style={{
+        fontSize: 34,
+        marginTop: 24
+      }}>
+        {outro ? "فالو کن برای فردا" : title}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+export const Video = ({
+  title,
+  template,
+  scenes,
+  words,
+  audioDuration
+}) => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+
+  const count = scenes.length;
+  const overlap = 12;
+
+  const sceneSpan = Math.ceil(
+    (durationInFrames + overlap * Math.max(0, count - 1)) /
+    Math.max(1, count)
+  );
+
+  const progress = interpolate(
+    frame,
+    [0, durationInFrames - 1],
+    [0, 100],
+    clamp
+  );
+
+  return (
+    <AbsoluteFill style={{
+      backgroundColor: "#080D20",
+      overflow: "hidden",
+      fontFamily: "Vazirmatn, sans-serif"
+    }}>
+
+      {/* Background scene timeline */}
+      {scenes.map((scene, index) => {
+        const start = index * (sceneSpan - overlap);
+
+        const duration = Math.min(
+          sceneSpan,
+          durationInFrames - start
+        );
+
+        if (duration <= 0) return null;
+
+        return (
+          <Sequence
+            key={scene.clipPath}
+            from={start}
+            durationInFrames={duration}
+          >
+            <SceneLayer
+              scene={scene}
+              index={index}
+              total={count}
+              template={template}
+              duration={duration}
+            />
+          </Sequence>
+        );
+      })}
+
+      {/* Voiceover */}
+      <Audio src={staticFile("audio.mp3")} volume={1} />
+
+      {/* Brand watermark */}
+      <div
+        dir="rtl"
+        style={{
+          position: "absolute",
+          top: 70,
+          right: 65,
+          color: "white",
+          fontSize: 34,
+          fontWeight: 700,
+          textShadow: "0 2px 12px black"
+        }}
+      >
+        ذهن‌خوان
+      </div>
+
+      {/* Subtitles */}
+      <WordSubtitles words={words} fps={fps} />
+
+      {/* Progress bar */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 10,
+          background: "rgba(255,255,255,.2)"
+        }}
+      >
+        <div
+          style={{
+            width: `${progress}%`,
+            height: "100%",
+            background: "#FFE082"
+          }}
+        />
+      </div>
+
+      {/* Intro */}
+      <Sequence from={0} durationInFrames={48}>
+        <BrandCard title={title} />
+      </Sequence>
+
+      {/* Outro */}
+      <Sequence
+        from={Math.max(0, durationInFrames - 48)}
+        durationInFrames={48}
+      >
+        <BrandCard title={title} outro />
+      </Sequence>
+
+    </AbsoluteFill>
+  );
+};
