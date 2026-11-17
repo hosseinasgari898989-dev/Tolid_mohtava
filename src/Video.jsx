@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   AbsoluteFill,
   Sequence,
+  cancelRender,
+  continueRender,
+  delayRender,
   interpolate,
   spring,
   useCurrentFrame,
@@ -53,16 +56,8 @@ const FactsTemplate = ({ text }) => (
 );
 
 // Template 2: numbered lists.
-const ListTemplate = ({ text, index }) => (
+const ListTemplate = ({ text }) => (
   <div style={baseFont}>
-    <div style={{
-      fontSize: 38,
-      color: "#FFE082",
-      marginBottom: 22
-    }}>
-      نکته {index + 1}
-    </div>
-
     <div style={{
       fontSize: 62,
       fontWeight: 700,
@@ -101,9 +96,9 @@ const QuestionTemplate = ({ text }) => (
   </div>
 );
 
-const TemplateText = ({ template, text, index }) => {
+const TemplateText = ({ template, text }) => {
   if (template === "list") {
-    return <ListTemplate text={text} index={index} />;
+    return <ListTemplate text={text} />;
   }
 
   if (template === "question") {
@@ -111,7 +106,7 @@ const TemplateText = ({ template, text, index }) => {
   }
 
   return <FactsTemplate text={text} />;
-};
+}
 
 // One scene with zoom and a crossfade transition.
 const SceneLayer = ({
@@ -195,7 +190,6 @@ const SceneLayer = ({
           <TemplateText
             template={template}
             text={scene.textOnScreen}
-            index={index}
           />
         </div>
       </AbsoluteFill>
@@ -270,7 +264,7 @@ const WordSubtitles = ({ words, fps }) => {
   );
 };
 
-// Branded intro and outro.
+// Branded outro.
 const BrandCard = ({ title, outro = false }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -329,6 +323,46 @@ export const Video = ({
   words,
   audioDuration
 }) => {
+  // Hold rendering until both local Vazirmatn weights are ready.
+  const [fontHandle] = useState(
+    () => delayRender("Loading Vazirmatn regular and bold fonts")
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadFonts = async () => {
+      try {
+        const regular = await document.fonts.load(
+          '400 64px "Vazirmatn"'
+        );
+        const bold = await document.fonts.load(
+          '700 64px "Vazirmatn"'
+        );
+
+        await document.fonts.ready;
+
+        if (!regular.length || !bold.length) {
+          throw new Error("Vazirmatn font files did not load.");
+        }
+
+        if (!cancelled) {
+          continueRender(fontHandle);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          cancelRender(error);
+        }
+      }
+    };
+
+    loadFonts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fontHandle]);
+
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
@@ -423,11 +457,6 @@ export const Video = ({
           }}
         />
       </div>
-
-      {/* Intro */}
-      <Sequence from={0} durationInFrames={48}>
-        <BrandCard title={title} />
-      </Sequence>
 
       {/* Outro */}
       <Sequence

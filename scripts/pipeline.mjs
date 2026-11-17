@@ -4,7 +4,6 @@ import { execFileSync } from "node:child_process";
 
 const BANK_PATH = "content_bank.json";
 const HISTORY_PATH = "used_clips.json";
-const VOICE = "fa-IR-FaridNeural";
 
 const wait = (ms) =>
   new Promise(resolve => setTimeout(resolve, ms));
@@ -21,10 +20,113 @@ function writeOutputs(values) {
   }
 }
 
+function validateBank(bank) {
+  const templates = new Set(["facts", "list", "question"]);
+
+  if (!Array.isArray(bank)) {
+    throw new Error("content_bank.json must contain a JSON array.");
+  }
+
+  const seenIds = new Set();
+
+  for (const [index, video] of bank.entries()) {
+    const label = `content_bank.json item ${index + 1}`;
+
+    if (!video || typeof video !== "object" || Array.isArray(video)) {
+      throw new Error(`${label} must be an object.`);
+    }
+
+    if (typeof video.id !== "string" || !video.id.trim()) {
+      throw new Error(`${label}: required field "id" must be a non-empty string.`);
+    }
+
+    if (seenIds.has(video.id)) {
+      throw new Error(`content_bank.json has duplicate video id: ${video.id}`);
+    }
+    seenIds.add(video.id);
+
+    if (!["pending", "done"].includes(video.status)) {
+      throw new Error(
+        `${label} (${video.id}): status must be "pending" or "done".`
+      );
+    }
+
+    for (const field of ["title", "voiceover", "caption"]) {
+      if (typeof video[field] !== "string" || !video[field].trim()) {
+        throw new Error(
+          `${label} (${video.id}): required field "${field}" must be a non-empty string.`
+        );
+      }
+    }
+
+    if (!templates.has(video.template)) {
+      throw new Error(
+        `${label} (${video.id}): template must be one of facts, list, question.`
+      );
+    }
+
+    if (!Array.isArray(video.scenes) || video.scenes.length === 0) {
+      throw new Error(
+        `${label} (${video.id}): "scenes" must be a non-empty array.`
+      );
+    }
+
+    for (const [sceneIndex, scene] of video.scenes.entries()) {
+      if (
+        !scene ||
+        typeof scene.text_on_screen !== "string" ||
+        !scene.text_on_screen.trim()
+      ) {
+        throw new Error(
+          `${label} (${video.id}): scene ${sceneIndex + 1} needs non-empty "text_on_screen".`
+        );
+      }
+
+      const keywords = scene.stock_keywords;
+      const validKeywords =
+        (typeof keywords === "string" && keywords.trim()) ||
+        (Array.isArray(keywords) &&
+          keywords.length > 0 &&
+          keywords.every(item => typeof item === "string" && item.trim()));
+
+      if (!validKeywords) {
+        throw new Error(
+          `${label} (${video.id}): scene ${sceneIndex + 1} needs non-empty "stock_keywords".`
+        );
+      }
+    }
+
+    const validHashtags =
+      (typeof video.hashtags === "string" && video.hashtags.trim()) ||
+      (Array.isArray(video.hashtags) &&
+        video.hashtags.length > 0 &&
+        video.hashtags.every(tag => typeof tag === "string" && tag.trim()));
+
+    if (!validHashtags) {
+      throw new Error(
+        `${label} (${video.id}): "hashtags" must be a non-empty string or array of strings.`
+      );
+    }
+  }
+
+  console.log(`Validated ${bank.length} video object(s) in content_bank.json.`);
+}
+
 function chooseFile(files) {
-  const mp4 = (files || []).filter(file =>
-    file.file_type === "video/mp4" && file.link
-  );
+  const mp4 = (files || []).filter(file => {
+    const width = Number(file.width);
+    const height = Number(file.height);
+
+    return (
+      file.file_type === "video/mp4" &&
+      file.link &&
+      Number.isFinite(width) &&
+      Number.isFinite(height) &&
+      width > 0 &&
+      height > 0 &&
+      Math.max(width, height) < 3840
+    );
+  });
 
   if (!mp4.length) return null;
 
@@ -42,10 +144,10 @@ function chooseFile(files) {
       ? vertical
       : mp4;
 
-  // Prefer a reasonable file size for GitHub runners.
+  // Choose the available non-4K MP4 closest to 1080 pixels wide.
   pool.sort((a, b) =>
-    (Number(a.width) * Number(a.height)) -
-    (Number(b.width) * Number(b.height))
+    Math.abs(Number(a.width) - 1080) -
+    Math.abs(Number(b.width) - 1080)
   );
 
   return pool[0];
@@ -93,7 +195,6 @@ async function searchPexels(query, page, key) {
 }
 
 async function findUnusedVideo(query, usedIds, apiKey) {
-  // Search several pages before giving up.
   for (let page = 1; page <= 4; page++) {
     const data = await searchPexels(query, page, apiKey);
 
@@ -111,7 +212,7 @@ async function findUnusedVideo(query, usedIds, apiKey) {
   }
 
   throw new Error(
-    `No unused Pexels clip found for: ${query}`
+    `No unused, non-4K Pexels clip found for: ${query}`
   );
 }
 
@@ -140,11 +241,13 @@ async function main() {
     fs.readFileSync(BANK_PATH, "utf8")
   );
 
+  // Validate every entry before selecting or processing a video.
+  validateBank(bank);
+
   const video = bank.find(item =>
     item.status === "pending"
   );
 
-  // No work is a successful result.
   if (!video) {
     console.log("No pending videos found.");
     writeOutputs({ has_video: "false" });
@@ -153,16 +256,6 @@ async function main() {
 
   if (!/^[a-zA-Z0-9_-]+$/.test(video.id)) {
     throw new Error("Video ID must use English letters, numbers, _ or -.");
-  }
-
-  if (!Array.isArray(video.scenes) || video.scenes.length < 1) {
-    throw new Error("Video must have at least one scene.");
-  }
-
-  const allowedTemplates = ["facts", "list", "question"];
-
-  if (!allowedTemplates.includes(video.template)) {
-    throw new Error("Unknown video template.");
   }
 
   const apiKey = process.env.PEXELS_API_KEY;
@@ -174,7 +267,6 @@ async function main() {
   fs.mkdirSync("out", { recursive: true });
   fs.mkdirSync("public/clips", { recursive: true });
 
-  // Load clip history.
   let history = { used_ids: [] };
 
   if (fs.existsSync(HISTORY_PATH)) {
@@ -187,7 +279,7 @@ async function main() {
     (history.used_ids || []).map(String)
   );
 
-  // 1. Prepare Persian voiceover.
+  // 1. Create Persian voiceover and word timings.
   const voicePath = "out/voiceover.txt";
   const audioPath = "public/audio.mp3";
   const wordsPath = "public/words.json";
@@ -211,7 +303,7 @@ async function main() {
     { stdio: "inherit" }
   );
 
-  // 2. Check the actual audio duration.
+  // 2. Read the actual audio duration.
   const audioDuration = Number(
     execFileSync(
       "ffprobe",
@@ -241,7 +333,7 @@ async function main() {
     fs.readFileSync(wordsPath, "utf8")
   );
 
-  // 3. Download one unique clip for every scene.
+  // 3. Download one unique clip for each scene.
   const selectedClips = [];
   const scenes = [];
 
@@ -253,10 +345,6 @@ async function main() {
     const keywords = Array.isArray(scene.stock_keywords)
       ? scene.stock_keywords.join(" ")
       : scene.stock_keywords;
-
-    if (!keywords || !String(keywords).trim()) {
-      throw new Error(`Scene ${sceneNumber} has no keywords.`);
-    }
 
     console.log(
       `Finding unused clip for scene ${sceneNumber}...`
@@ -270,7 +358,6 @@ async function main() {
 
     const videoId = String(result.video.id);
 
-    // Reserve immediately to prevent reuse in this run.
     usedIds.add(videoId);
 
     const filename = `scene_${sceneNumber}.mp4`;
@@ -292,21 +379,19 @@ async function main() {
     await wait(300);
   }
 
-  // 4. Prepare caption and Pexels credits.
-  const hashtags = Array.isArray(video.hashtags)
-    ? video.hashtags.join(" ")
-    : String(video.hashtags || "");
+  // 4. Keep the caption separate from the stock-footage credits.
+  const hashtagList = Array.isArray(video.hashtags)
+    ? video.hashtags
+    : String(video.hashtags || "").split(/\s+/);
 
-  const credits = selectedClips.map(clip =>
-    `- ${clip.creator}: ${clip.url}`
-  ).join("\n");
+  const captionHashtags = hashtagList
+    .filter(tag => typeof tag === "string" && tag.trim())
+    .slice(0, 5)
+    .join(" ");
 
   const captionText = [
     video.caption || "",
-    hashtags,
-    "Stock footage from Pexels:",
-    credits,
-    "https://www.pexels.com/"
+    captionHashtags
   ].filter(Boolean).join("\n\n");
 
   const captionPath = `out/${video.id}-caption.txt`;
@@ -317,7 +402,24 @@ async function main() {
     "utf8"
   );
 
-  // 5. Send all data to Remotion.
+  const creditLines = selectedClips.map(clip =>
+    `- ${clip.creator}: ${clip.url}`
+  );
+
+  const creditsText = [
+    "Stock footage credits (Pexels):",
+    ...creditLines
+  ].join("\n");
+
+  const creditsPath = `out/${video.id}-credits.txt`;
+
+  fs.writeFileSync(
+    creditsPath,
+    creditsText,
+    "utf8"
+  );
+
+  // 5. Pass render data to Remotion.
   const props = {
     title: video.title,
     template: video.template,
@@ -377,7 +479,8 @@ async function main() {
     has_video: "true",
     video_id: video.id,
     video_path: videoPath,
-    caption_path: captionPath
+    caption_path: captionPath,
+    credits_path: creditsPath
   });
 }
 
