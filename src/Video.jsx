@@ -293,8 +293,9 @@ const SceneLayer = ({ scene, index, videoId, frameOverride }) => {
 };
 
 
-const SceneSubtitles = ({ scenes, fps, hideAfterFrame }) => {
-  const frame = useCurrentFrame();
+const SceneSubtitles = ({ scenes, fps, hideAfterFrame, frameOverride }) => {
+  const currentFrame = useCurrentFrame();
+  const frame = frameOverride ?? currentFrame;
   if (hideAfterFrame !== undefined && frame >= hideAfterFrame) return null;
 
   const seconds = frame / fps;
@@ -488,6 +489,7 @@ const OutroBridge = ({
           frameOverride={0}
         />
         <BrandMark />
+        <SceneSubtitles scenes={[firstScene]} fps={30} frameOverride={0} />
         <ProgressBar progress={0} />
       </AbsoluteFill>
     </AbsoluteFill>

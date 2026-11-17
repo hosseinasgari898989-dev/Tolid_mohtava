@@ -176,7 +176,11 @@ function mapSceneTimings(scenes, words) {
       throw new Error(`Invalid real word timings in scene ${sceneIndex + 1}.`);
     }
     cursor = found + expected.length;
-    return { first, last };
+    const subtitleTimings = expected.map((token, offset) => {
+      const timing = timingTokens[found + offset];
+      return { start: timing.start, end: timing.end };
+    });
+    return { first, last, subtitleTimings };
   });
 
   return scenes.map((scene, index) => {
@@ -190,12 +194,12 @@ function mapSceneTimings(scenes, words) {
     }
     const displayTokens = [...scene.narration.matchAll(/[\p{L}\p{N}]+/gu)];
     if (displayTokens.length !== expected.length) {
-      throw new Error(`Scene ${sceneIndex + 1} subtitle token alignment is inconsistent.`);
+      throw new Error(`Scene ${index + 1} subtitle token alignment is inconsistent.`);
     }
     const subtitleWords = displayTokens.map((match, offset) => ({
       text: match[0],
-      startSeconds: timingTokens[found + offset].start,
-      endSeconds: timingTokens[found + offset].end
+      startSeconds: matched[index].subtitleTimings[offset].start,
+      endSeconds: matched[index].subtitleTimings[offset].end
     }));
     return {
       textOnScreen: scene.text_on_screen,
