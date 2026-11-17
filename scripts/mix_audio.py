@@ -2,6 +2,7 @@ import argparse
 import hashlib
 import json
 import math
+import re
 import subprocess
 import wave
 from pathlib import Path
@@ -92,6 +93,84 @@ def build_events(scenes, duration):
     return events
 
 
+def loudnorm_report(stderr):
+    matches = re.findall(r'\{\s*"input_i".*?\}', stderr, flags=re.DOTALL)
+    if not matches:
+        raise RuntimeError("FFmpeg loudnorm did not return its measurement JSON.")
+    try:
+        return json.loads(matches[-1])
+    except json.JSONDecodeError as error:
+        raise RuntimeError("Could not parse FFmpeg loudnorm measurement JSON.") from error
+
+
+def finite_measurement(report, key):
+    try:
+        value = float(report[key])
+    except (KeyError, TypeError, ValueError) as error:
+        raise RuntimeError(f"FFmpeg loudnorm measurement '{key}' is missing or invalid.") from error
+    if not math.isfinite(value):
+        raise RuntimeError(f"FFmpeg loudnorm measurement '{key}' is not finite.")
+    return value
+
+
+def normalize_two_pass(input_path, output_path):
+    target_i = -14.0
+    target_tp = -1.5
+    target_lra = 11.0
+
+    print("Loudness normalization pass 1/2: measuring the final mix...")
+    analysis = subprocess.run(
+        [
+            "ffmpeg", "-hide_banner", "-nostats", "-i", str(input_path),
+            "-af", f"loudnorm=I={target_i}:TP={target_tp}:LRA={target_lra}:print_format=json",
+            "-f", "null", "-"
+        ],
+        check=True,
+        capture_output=True,
+        text=True
+    )
+    measured = loudnorm_report(analysis.stderr)
+    measured_i = finite_measurement(measured, "input_i")
+    measured_tp = finite_measurement(measured, "input_tp")
+    measured_lra = finite_measurement(measured, "input_lra")
+    measured_thresh = finite_measurement(measured, "input_thresh")
+    offset = finite_measurement(measured, "target_offset")
+
+    second_pass_filter = (
+        f"loudnorm=I={target_i}:TP={target_tp}:LRA={target_lra}:"
+        f"measured_I={measured_i:.6f}:measured_TP={measured_tp:.6f}:"
+        f"measured_LRA={measured_lra:.6f}:measured_thresh={measured_thresh:.6f}:"
+        f"offset={offset:.6f}:linear=true:print_format=json"
+    )
+
+    print("Loudness normalization pass 2/2: applying measured -14 LUFS / -1.5 dBTP targets...")
+    normalized = subprocess.run(
+        [
+            "ffmpeg", "-y", "-hide_banner", "-nostats", "-i", str(input_path),
+            "-af", second_pass_filter,
+            "-ar", str(SAMPLE_RATE), "-c:a", "libmp3lame", "-b:a", "192k",
+            str(output_path)
+        ],
+        check=True,
+        capture_output=True,
+        text=True
+    )
+    final_report = loudnorm_report(normalized.stderr)
+    output_i = finite_measurement(final_report, "output_i")
+    output_tp = finite_measurement(final_report, "output_tp")
+
+    if abs(output_i - target_i) > 0.6:
+        raise RuntimeError(
+            f"Final loudness is {output_i:.2f} LUFS; expected approximately {target_i:.1f} LUFS."
+        )
+    if output_tp > target_tp + 0.15:
+        raise RuntimeError(
+            f"Final true peak is {output_tp:.2f} dBTP; it exceeds the {target_tp:.1f} dBTP target."
+        )
+
+    print(f"Verified final loudness: {output_i:.2f} LUFS, true peak {output_tp:.2f} dBTP.")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--voice", required=True)
@@ -163,22 +242,27 @@ def main():
     mix_inputs = "[mix0]" + "".join(sfx_labels)
     filters.append(
         f"{mix_inputs}amix=inputs={1 + len(sfx_labels)}:duration=first:"
-        "dropout_transition=0,loudnorm=I=-16:TP=-1.5:LRA=11[out]"
+        "dropout_transition=0[out]"
     )
 
+    premaster_path = Path("out/final-mix-premaster.wav")
     command += [
         "-filter_complex", ";".join(filters),
         "-map", "[out]",
         "-t", f"{duration:.3f}",
-        "-c:a", "libmp3lame",
-        "-b:a", "192k",
-        args.output,
+        "-ar", str(SAMPLE_RATE),
+        "-c:a", "pcm_s16le",
+        str(premaster_path),
     ]
     subprocess.run(command, check=True)
+    if not premaster_path.exists() or premaster_path.stat().st_size == 0:
+        raise RuntimeError("FFmpeg did not create the final premaster mix.")
+
     output_path = Path(args.output)
+    normalize_two_pass(premaster_path, output_path)
     if not output_path.exists() or output_path.stat().st_size == 0:
-        raise RuntimeError("FFmpeg did not create the mixed audio track.")
-    print(f"Mixed and loudness-normalized audio: {output_path}")
+        raise RuntimeError("FFmpeg did not create the normalized final audio track.")
+    print(f"Mixed and two-pass loudness-normalized audio: {output_path}")
 
 
 if __name__ == "__main__":
