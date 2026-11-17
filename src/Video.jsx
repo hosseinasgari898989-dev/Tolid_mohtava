@@ -326,9 +326,9 @@ const SceneSubtitles = ({ scenes, fps, hideAfterFrame }) => {
         ...baseFont,
         maxWidth: 936,
         margin: "0 auto",
-        fontSize: 48,
+        fontSize: scene.narration.length > 90 ? 38 : scene.narration.length > 65 ? 42 : 48,
         fontWeight: 800,
-        lineHeight: 1.5,
+        lineHeight: 1.35,
         WebkitTextStroke: "1.5px #07101f",
         paintOrder: "stroke fill",
         textShadow: "0 4px 14px rgba(0,0,0,.98), 0 0 24px rgba(0,0,0,.8)"
