@@ -160,7 +160,7 @@ const SceneLayer = ({
           dir="rtl"
           style={{
             maxWidth: "100%",
-            opacity: movement,
+            opacity: 1,
             transform:
               `translateY(${(1 - movement) * 35}px) scale(${0.96 + movement * 0.04})`
           }}
