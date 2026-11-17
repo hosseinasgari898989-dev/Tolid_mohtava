@@ -193,7 +193,7 @@ function mapSceneTimings(scenes, words) {
       throw new Error(`Scene ${index + 1} has a non-positive duration.`);
     }
     const displayTokens = [...scene.narration.matchAll(/[\p{L}\p{N}]+/gu)];
-    if (displayTokens.length !== expected.length) {
+    if (displayTokens.length !== normalizedTokens(scene.narration).length) {
       throw new Error(`Scene ${index + 1} subtitle token alignment is inconsistent.`);
     }
     const subtitleWords = displayTokens.map((match, offset) => ({

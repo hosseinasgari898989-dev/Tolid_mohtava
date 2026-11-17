@@ -62,7 +62,7 @@ jobs:
           VIDEO_ID: ${{ inputs.video_id || 'brain-tired-001' }}
         run: node scripts/pipeline.mjs
 
-      - name: Upload video and caption to GitHub Release
+      - name: Upload video, caption and contact sheet to GitHub Release
         if: steps.pipeline.outputs.has_video == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
