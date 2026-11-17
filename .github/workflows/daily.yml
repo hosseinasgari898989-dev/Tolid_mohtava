@@ -64,13 +64,14 @@ jobs:
           VIDEO_ID: ${{ steps.pipeline.outputs.video_id }}
           VIDEO_PATH: ${{ steps.pipeline.outputs.video_path }}
           CAPTION_PATH: ${{ steps.pipeline.outputs.caption_path }}
+          CONTACT_SHEET_PATH: ${{ steps.pipeline.outputs.contact_sheet_path }}
         run: |
           set -euo pipefail
           TAG="video-${VIDEO_ID}"
           echo "Uploading ${VIDEO_ID}..."
 
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$VIDEO_PATH" "$CAPTION_PATH" --clobber
+            gh release upload "$TAG" "$VIDEO_PATH" "$CAPTION_PATH" "$CONTACT_SHEET_PATH" --clobber
           else
             gh release create "$TAG" "$VIDEO_PATH" "$CAPTION_PATH" \
               --title "ذهن‌خوان - ${VIDEO_ID}" \

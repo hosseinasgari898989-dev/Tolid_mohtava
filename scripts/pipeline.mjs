@@ -188,8 +188,18 @@ function mapSceneTimings(scenes, words) {
     if (endSeconds <= startSeconds) {
       throw new Error(`Scene ${index + 1} has a non-positive duration.`);
     }
+    const displayTokens = [...scene.narration.matchAll(/[\p{L}\p{N}]+/gu)];
+    if (displayTokens.length !== expected.length) {
+      throw new Error(`Scene ${sceneIndex + 1} subtitle token alignment is inconsistent.`);
+    }
+    const subtitleWords = displayTokens.map((match, offset) => ({
+      text: match[0],
+      startSeconds: timingTokens[found + offset].start,
+      endSeconds: timingTokens[found + offset].end
+    }));
     return {
       textOnScreen: scene.text_on_screen,
+      subtitleWords,
       narration: scene.narration,
       highlight: scene.highlight || "",
       visual: scene.visual || ["neural", "particles", "waves", "geometry"][index % 4],
@@ -340,11 +350,20 @@ async function main() {
 
   console.log(`Successfully rendered V3 ${video.id} (${renderedDuration.toFixed(2)}s).`);
 
+  const contactSheetPath = "out/" + video.id + "-contact-sheet.png";
+  console.log("Extracting requested sample frames and verifying the loop cover match...");
+  execFileSync("python3", [
+    "scripts/contact_sheet.py",
+    "--video", videoPath,
+    "--output", contactSheetPath
+  ], { stdio: "inherit" });
+
   const outputs = {
     has_video: "true",
     video_id: video.id,
     video_path: videoPath,
     caption_path: captionPath,
+    contact_sheet_path: contactSheetPath,
     has_voice_samples: "false"
   };
 

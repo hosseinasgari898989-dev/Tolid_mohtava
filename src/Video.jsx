@@ -126,8 +126,8 @@ const SceneIcon = ({ name, frameOverride }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        transform: `translateY(${floatY}px) scale(${0.72 + entrance * 0.28})`,
-        opacity: interpolate(frame, [0, 5], [0.25, 1], clamp),
+        transform: `translateY(${floatY}px) scale(${0.92 + entrance * 0.08})`,
+        opacity: 1,
         filter: "drop-shadow(0 0 18px rgba(72,230,242,.55))"
       }}
     >
@@ -144,7 +144,7 @@ const KineticText = ({ scene, isHook, frameOverride }) => {
   const frame = frameOverride ?? currentFrame;
   const { fps } = useVideoConfig();
   const words = scene.textOnScreen.trim().split(/\s+/u);
-  const fontSize = isHook ? 122 : 118;
+  const fontSize = isHook ? 130 : 120;
   const highlight = normalizeWord(scene.highlight || "");
 
   return (
@@ -181,8 +181,8 @@ const KineticText = ({ scene, isHook, frameOverride }) => {
             style={{
               display: "inline-block",
               color: active ? "#FFE082" : "#FFFFFF",
-              opacity: interpolate(wordFrame, [0, 3], [0.08, 1], clamp),
-              transform: `translateY(${(1 - pop) * 32}px) scale(${0.68 + pop * 0.32})`,
+              opacity: 1,
+              transform: `translateY(${(1 - pop) * 10}px) scale(${0.98 + pop * 0.02})`,
               textShadow: active
                 ? "0 0 10px #FFE082, 0 0 26px rgba(255,224,130,.9), 0 5px 18px rgba(0,0,0,.9)"
                 : "0 5px 18px rgba(0,0,0,.9)"
@@ -211,19 +211,23 @@ const SceneLayer = ({ scene, index, videoId, frameOverride }) => {
   const cameraScale = 1.045 + Math.sin(frame * 0.012) * 0.009;
 
   let transitionStyle = {};
-  if (scene.transition === "slide") {
+  if (index === 0) {
     transitionStyle = {
-      transform: `translateX(${(1 - entrance) * 135}px) scale(${0.98 + entrance * 0.02})`
+      transform: "scale(" + (0.98 + entrance * 0.02) + ")"
+    };
+  } else if (scene.transition === "slide") {
+    transitionStyle = {
+      transform: "translateX(" + ((1 - entrance) * 135) + "px) scale(" + (0.98 + entrance * 0.02) + ")"
     };
   } else if (scene.transition === "glitch") {
     const jitter = frame < 7 ? Math.sin(frame * 5.2) * (7 - frame) * 2 : 0;
     transitionStyle = {
-      transform: `translateX(${jitter}px) scale(${0.94 + entrance * 0.06})`,
+      transform: "translateX(" + jitter + "px) scale(" + (0.94 + entrance * 0.06) + ")",
       filter: frame < 7 ? "saturate(1.5) contrast(1.12)" : "none"
     };
   } else {
     transitionStyle = {
-      transform: `scale(${0.82 + entrance * 0.18})`
+      transform: "scale(" + (0.95 + entrance * 0.05) + ")"
     };
   }
 
@@ -277,7 +281,7 @@ const SceneLayer = ({ scene, index, videoId, frameOverride }) => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            opacity: interpolate(frame, [0, 3, 18, 24], [0.12, 1, 1, 0], clamp),
+            opacity: 1,
             ...transitionStyle
           }}
         >
@@ -288,28 +292,44 @@ const SceneLayer = ({ scene, index, videoId, frameOverride }) => {
   );
 };
 
-const HEADLINE_HOLD_FRAMES = 24;
 
-const SceneSubtitles = ({ scenes, fps, hideAfterFrame, frameOverride }) => {
-  const currentFrame = useCurrentFrame();
-  const frame = frameOverride ?? currentFrame;
-  if (frame < HEADLINE_HOLD_FRAMES ||
-      (hideAfterFrame !== undefined && frame >= hideAfterFrame)) return null;
+const SceneSubtitles = ({ scenes, fps, hideAfterFrame }) => {
+  const frame = useCurrentFrame();
+  if (hideAfterFrame !== undefined && frame >= hideAfterFrame) return null;
 
   const seconds = frame / fps;
   const scene = scenes.find(item =>
     seconds >= item.startSeconds && seconds < item.endSeconds
   );
-  if (!scene) return null;
+  if (!scene || !Array.isArray(scene.subtitleWords) || scene.subtitleWords.length === 0) {
+    return null;
+  }
 
+  const timedWords = scene.subtitleWords;
+  let activeIndex = timedWords.findIndex(word =>
+    seconds >= word.startSeconds && seconds < word.endSeconds
+  );
+
+  if (activeIndex < 0) {
+    let previousIndex = -1;
+    for (let index = 0; index < timedWords.length; index++) {
+      if (timedWords[index].startSeconds <= seconds) previousIndex = index;
+      else break;
+    }
+    if (previousIndex < 0 ||
+        seconds - timedWords[previousIndex].endSeconds > 0.28) return null;
+    activeIndex = previousIndex;
+  }
+
+  const firstVisible = Math.max(0, activeIndex - 2);
+  const visibleWords = timedWords.slice(firstVisible, activeIndex + 3);
   const normalizedHeadline = scene.textOnScreen.trim()
     .split(/\s+/u).map(normalizeWord).filter(Boolean).join(" ");
-  const normalizedNarration = scene.narration.trim()
-    .split(/\s+/u).map(normalizeWord).filter(Boolean).join(" ");
+  const normalizedVisible = visibleWords
+    .map(word => normalizeWord(word.text)).filter(Boolean).join(" ");
 
-  // The full speech is shown only after the headline has fully faded out.
-  // When headline and narration are identical, showing the subtitle is redundant.
-  if (!normalizedNarration || normalizedHeadline === normalizedNarration) return null;
+  // Keep the headline visible; suppress only a subtitle window that exactly duplicates it.
+  if (normalizedVisible && normalizedVisible === normalizedHeadline) return null;
 
   return (
     <div
@@ -320,79 +340,156 @@ const SceneSubtitles = ({ scenes, fps, hideAfterFrame, frameOverride }) => {
         left: 72,
         right: 72,
         height: "14%",
-        overflow: "hidden",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "10px 24px",
-        ...baseFont,
         maxWidth: 936,
         margin: "0 auto",
-        fontSize: scene.narration.length > 90 ? 38 : scene.narration.length > 65 ? 42 : 48,
-        fontWeight: 800,
-        lineHeight: 1.35,
-        WebkitTextStroke: "1.5px #07101f",
+        padding: "10px 24px",
+        overflow: "visible",
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "center",
+        justifyContent: "center",
+        columnGap: 13,
+        rowGap: 8,
+        ...baseFont,
+        fontSize: 58,
+        fontWeight: 900,
+        lineHeight: 1.25,
+        WebkitTextStroke: "3px #07101f",
         paintOrder: "stroke fill",
         textShadow: "0 4px 14px rgba(0,0,0,.98), 0 0 24px rgba(0,0,0,.8)"
       }}
     >
-      {scene.narration}
+      {visibleWords.map((word, index) => {
+        const isActive = firstVisible + index === activeIndex;
+        const wordStartFrame = Math.round(word.startSeconds * fps);
+        const pop = spring({
+          frame: Math.max(0, frame - wordStartFrame),
+          fps,
+          config: { damping: 11, stiffness: 185, mass: 0.55 }
+        });
+
+        return (
+          <span
+            key={String(firstVisible + index) + "-" + word.text}
+            style={{
+              display: "inline-block",
+              color: isActive ? "#FFE082" : "#FFFFFF",
+              transform: "scale(" + (isActive ? 0.92 + pop * 0.14 : 1) + ")",
+              transformOrigin: "center",
+              WebkitTextStroke: "3px #07101f",
+              paintOrder: "stroke fill",
+              textShadow: isActive
+                ? "0 0 9px #FFE082, 0 0 22px rgba(255,224,130,.75), 0 4px 14px rgba(0,0,0,.98)"
+                : "0 4px 14px rgba(0,0,0,.98)"
+            }}
+          >
+            {word.text}
+          </span>
+        );
+      })}
     </div>
   );
 };
 
-const LOOP_FRAMES = 30;
+const OUTRO_FRAMES = 45;
 
-const LoopBridge = ({ scene, videoId }) => {
+const BrandMark = () => (
+  <div
+    dir="rtl"
+    style={{
+      position: "absolute",
+      top: "13%",
+      right: 66,
+      color: "white",
+      fontSize: 38,
+      fontWeight: 900,
+      textShadow: "0 2px 14px black",
+      zIndex: 5
+    }}
+  >
+    ذهن‌خوان
+  </div>
+);
+
+const ProgressBar = ({ progress }) => (
+  <div
+    style={{
+      position: "absolute",
+      top: "12%",
+      left: 0,
+      right: 0,
+      height: 7,
+      background: "rgba(255,255,255,.14)",
+      zIndex: 6
+    }}
+  >
+    <div
+      style={{
+        width: progress + "%",
+        height: "100%",
+        background: "#FFE082",
+        boxShadow: "0 0 18px #FFE082"
+      }}
+    />
+  </div>
+);
+
+const OutroBridge = ({
+  lastScene,
+  lastSceneIndex,
+  firstScene,
+  videoId,
+  lastSceneDurationFrames
+}) => {
   const frame = useCurrentFrame();
-  const reverseFrame = Math.max(0, LOOP_FRAMES - 1 - frame);
-  const opacity = interpolate(frame, [0, 9], [0, 1], clamp);
-  const progress = interpolate(reverseFrame, [0, LOOP_FRAMES - 1], [0, 100], clamp);
+  const coverStart = OUTRO_FRAMES - 22;
+  const coverOpacity = interpolate(frame, [coverStart, OUTRO_FRAMES - 1], [0, 1], clamp);
+  const closingOpacity = interpolate(frame, [0, 3, 21, 28], [0, 1, 1, 0], clamp);
+  const lastSceneFrame = Math.max(0, lastSceneDurationFrames - OUTRO_FRAMES + frame);
+  const resetProgress = interpolate(frame, [coverStart, OUTRO_FRAMES - 1], [100, 0], clamp);
 
   return (
-    <AbsoluteFill style={{ opacity, zIndex: 20 }}>
+    <AbsoluteFill>
       <SceneLayer
-        scene={scene}
-        index={0}
+        scene={lastScene}
+        index={lastSceneIndex}
         videoId={videoId}
-        frameOverride={reverseFrame}
+        frameOverride={lastSceneFrame}
       />
+      <BrandMark />
+      <ProgressBar progress={resetProgress} />
       <div
         dir="rtl"
         style={{
           position: "absolute",
-          top: "13%",
-          right: 66,
-          color: "white",
-          fontSize: 38,
+          top: "55%",
+          left: 72,
+          right: 72,
+          textAlign: "center",
+          color: "#FFE082",
+          fontFamily: "Vazirmatn, sans-serif",
+          fontSize: 64,
           fontWeight: 900,
-          textShadow: "0 2px 14px black",
-          zIndex: 25
+          opacity: closingOpacity,
+          transform: "scale(" + (0.96 + closingOpacity * 0.04) + ")",
+          WebkitTextStroke: "2px #07101f",
+          paintOrder: "stroke fill",
+          textShadow: "0 0 14px rgba(255,224,130,.75), 0 5px 20px rgba(0,0,0,.98)",
+          zIndex: 12
         }}
       >
-        ذهن‌خوان
+        فالو کن برای فردا
       </div>
-      <SceneSubtitles scenes={[scene]} fps={30} frameOverride={reverseFrame} />
-      <div
-        style={{
-          position: "absolute",
-          top: "12%",
-          left: 0,
-          right: 0,
-          height: 7,
-          background: "rgba(255,255,255,.14)",
-          zIndex: 26
-        }}
-      >
-        <div
-          style={{
-            width: `${progress}%`,
-            height: "100%",
-            background: "#FFE082",
-            boxShadow: "0 0 18px #FFE082"
-          }}
+      <AbsoluteFill style={{ opacity: coverOpacity, zIndex: 30 }}>
+        <SceneLayer
+          scene={firstScene}
+          index={0}
+          videoId={videoId}
+          frameOverride={0}
         />
-      </div>
+        <BrandMark />
+        <ProgressBar progress={0} />
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };
@@ -432,7 +529,7 @@ export const Video = ({
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const progress = interpolate(frame, [0, durationInFrames - 1], [0, 100], clamp);
-  const loopFrom = Math.max(0, durationInFrames - LOOP_FRAMES);
+  const outroFrom = Math.max(0, durationInFrames - OUTRO_FRAMES);
 
   return (
     <AbsoluteFill style={{
@@ -455,48 +552,24 @@ export const Video = ({
 
       <Audio src={staticFile("audio.mp3")} volume={1} />
 
-      <div
-        dir="rtl"
-        style={{
-          position: "absolute",
-          top: "13%",
-          right: 66,
-          color: "white",
-          fontSize: 38,
-          fontWeight: 900,
-          textShadow: "0 2px 14px black",
-          zIndex: 5
-        }}
-      >
-        ذهن‌خوان
-      </div>
 
-      <SceneSubtitles scenes={scenes} fps={fps} hideAfterFrame={loopFrom} />
-
-      <div
-        style={{
-          position: "absolute",
-          top: "12%",
-          left: 0,
-          right: 0,
-          height: 7,
-          background: "rgba(255,255,255,.14)",
-          zIndex: 6
-        }}
-      >
-        <div style={{
-          width: `${progress}%`,
-          height: "100%",
-          background: "#FFE082",
-          boxShadow: "0 0 18px #FFE082"
-        }} />
-      </div>
+      {frame < outroFrom && <BrandMark />}
+      <SceneSubtitles scenes={scenes} fps={fps} hideAfterFrame={outroFrom} />
+      {frame < outroFrom && <ProgressBar progress={progress} />}
 
       <Sequence
-        from={loopFrom}
-        durationInFrames={Math.min(LOOP_FRAMES, durationInFrames - loopFrom)}
+        from={outroFrom}
+        durationInFrames={Math.min(OUTRO_FRAMES, durationInFrames - outroFrom)}
       >
-        <LoopBridge scene={scenes[0]} videoId={videoId} />
+        <OutroBridge
+          lastScene={scenes[scenes.length - 1]}
+          lastSceneIndex={scenes.length - 1}
+          firstScene={scenes[0]}
+          videoId={videoId}
+          lastSceneDurationFrames={
+            scenes[scenes.length - 1].endFrame - scenes[scenes.length - 1].startFrame
+          }
+        />
       </Sequence>
     </AbsoluteFill>
   );
