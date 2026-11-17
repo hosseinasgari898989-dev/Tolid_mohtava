@@ -290,9 +290,11 @@ const SceneLayer = ({ scene, index, videoId, frameOverride }) => {
 
 const HEADLINE_HOLD_FRAMES = 24;
 
-const SceneSubtitles = ({ scenes, fps, hideAfterFrame }) => {
-  const frame = useCurrentFrame();
-  if (frame < HEADLINE_HOLD_FRAMES || frame >= hideAfterFrame) return null;
+const SceneSubtitles = ({ scenes, fps, hideAfterFrame, frameOverride }) => {
+  const currentFrame = useCurrentFrame();
+  const frame = frameOverride ?? currentFrame;
+  if (frame < HEADLINE_HOLD_FRAMES ||
+      (hideAfterFrame !== undefined && frame >= hideAfterFrame)) return null;
 
   const seconds = frame / fps;
   const scene = scenes.find(item =>
@@ -370,6 +372,7 @@ const LoopBridge = ({ scene, videoId }) => {
       >
         ذهن‌خوان
       </div>
+      <SceneSubtitles scenes={[scene]} fps={30} frameOverride={reverseFrame} />
       <div
         style={{
           position: "absolute",
