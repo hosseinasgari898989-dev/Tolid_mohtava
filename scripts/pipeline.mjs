@@ -62,16 +62,20 @@ function validateBank(bank) {
       throw new Error(`${label} (${video.id}): invalid template.`);
     }
 
-    if (video.tts_provider !== "edge") {
+    const ttsProvider = video.tts_provider ?? "edge";
+    const voice = video.voice ?? "fa-IR-DilaraNeural";
+    const rate = video.rate ?? "+6%";
+    const pitch = video.pitch ?? "+0Hz";
+    if (ttsProvider !== "edge") {
       throw new Error(`${label} (${video.id}): only tts_provider=edge is implemented.`);
     }
-    if (typeof video.voice !== "string" || !/^fa-IR-[A-Za-z]+Neural$/.test(video.voice)) {
+    if (typeof voice !== "string" || !/^fa-IR-[A-Za-z]+Neural$/.test(voice)) {
       throw new Error(`${label} (${video.id}): voice must be a Persian Edge Neural voice.`);
     }
-    if (typeof video.rate !== "string" || !/^[+-]\d+%$/.test(video.rate)) {
+    if (typeof rate !== "string" || !/^[+-]\d+%$/.test(rate)) {
       throw new Error(`${label} (${video.id}): rate must use a value such as +6%.`);
     }
-    if (typeof video.pitch !== "string" || !/^[+-]\d+Hz$/.test(video.pitch)) {
+    if (typeof pitch !== "string" || !/^[+-]\d+Hz$/.test(pitch)) {
       throw new Error(`${label} (${video.id}): pitch must use a value such as +0Hz.`);
     }
 
@@ -220,6 +224,13 @@ async function main() {
     return;
   }
 
+  const ttsConfig = {
+    provider: video.tts_provider ?? "edge",
+    voice: video.voice ?? "fa-IR-DilaraNeural",
+    rate: video.rate ?? "+6%",
+    pitch: video.pitch ?? "+0Hz"
+  };
+
   if (!/^[a-zA-Z0-9_-]+$/.test(video.id)) {
     throw new Error("Video ID must use English letters, numbers, _ or -.");
   }
@@ -237,10 +248,10 @@ async function main() {
 
   runTts([
     voicePath, rawVoicePath, wordsPath,
-    "--provider", video.tts_provider,
-    "--voice", video.voice,
-    "--rate", video.rate,
-    "--pitch", video.pitch
+    "--provider", ttsConfig.provider,
+    "--voice", ttsConfig.voice,
+    "--rate", ttsConfig.rate,
+    "--pitch", ttsConfig.pitch
   ]);
 
   const audioDuration = Number(execFileSync(
@@ -352,7 +363,7 @@ async function main() {
       runTts([
         "--sample", "--text", firstSentence, "--output", output,
         "--provider", "edge", "--voice", voice,
-        "--rate", video.rate, "--pitch", video.pitch
+        "--rate", ttsConfig.rate, "--pitch", ttsConfig.pitch
       ]);
     }
     outputs.has_voice_samples = "true";

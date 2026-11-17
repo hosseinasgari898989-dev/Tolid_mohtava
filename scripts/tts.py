@@ -60,18 +60,18 @@ async def create_edge_voice(text, audio_path, words_path, voice, rate, pitch):
 
 
 async def create_voice(provider, text, audio_path, words_path, voice, rate, pitch):
-    """Provider boundary for future TTS backends; only free Edge TTS is enabled."""
-    if provider == "edge":
-        await create_edge_voice(
-            text, audio_path, words_path, voice, rate, pitch
+    """Dispatch through the provider registry; only free Edge TTS is enabled."""
+    providers = {
+        "edge": create_edge_voice,
+        # Add future adapters here; they may read their credential from os.environ.
+    }
+    adapter = providers.get(provider)
+    if adapter is None:
+        raise ValueError(
+            f"Unsupported tts_provider '{provider}'. Available: {', '.join(providers)}."
         )
-        return
 
-    # Future providers may read their own credential from os.environ here.
-    # No credential or external provider is used by this version.
-    raise ValueError(
-        f"Unsupported tts_provider '{provider}'. This version supports only 'edge'."
-    )
+    await adapter(text, audio_path, words_path, voice, rate, pitch)
 
 
 def parse_args():
