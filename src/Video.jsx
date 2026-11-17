@@ -277,7 +277,7 @@ const SceneLayer = ({ scene, index, videoId, frameOverride }) => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            opacity: interpolate(frame, [0, 3], [0.12, 1], clamp),
+            opacity: interpolate(frame, [0, 3, 18, 24], [0.12, 1, 1, 0], clamp),
             ...transitionStyle
           }}
         >
@@ -288,9 +288,11 @@ const SceneLayer = ({ scene, index, videoId, frameOverride }) => {
   );
 };
 
+const HEADLINE_HOLD_FRAMES = 24;
+
 const SceneSubtitles = ({ scenes, fps, hideAfterFrame }) => {
   const frame = useCurrentFrame();
-  if (frame >= hideAfterFrame) return null;
+  if (frame < HEADLINE_HOLD_FRAMES || frame >= hideAfterFrame) return null;
 
   const seconds = frame / fps;
   const scene = scenes.find(item =>
@@ -298,17 +300,14 @@ const SceneSubtitles = ({ scenes, fps, hideAfterFrame }) => {
   );
   if (!scene) return null;
 
-  const headlineWords = new Set(
-    scene.textOnScreen.trim().split(/\s+/u).map(normalizeWord).filter(Boolean)
-  );
   const normalizedHeadline = scene.textOnScreen.trim()
     .split(/\s+/u).map(normalizeWord).filter(Boolean).join(" ");
   const normalizedNarration = scene.narration.trim()
     .split(/\s+/u).map(normalizeWord).filter(Boolean).join(" ");
 
+  // The full speech is shown only after the headline has fully faded out.
+  // When headline and narration are identical, showing the subtitle is redundant.
   if (!normalizedNarration || normalizedHeadline === normalizedNarration) return null;
-
-  const parts = scene.narration.split(/(\s+)/u);
 
   return (
     <div
@@ -320,7 +319,9 @@ const SceneSubtitles = ({ scenes, fps, hideAfterFrame }) => {
         right: 72,
         height: "14%",
         overflow: "hidden",
-        display: "block",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         padding: "10px 24px",
         ...baseFont,
         maxWidth: 936,
@@ -333,18 +334,7 @@ const SceneSubtitles = ({ scenes, fps, hideAfterFrame }) => {
         textShadow: "0 4px 14px rgba(0,0,0,.98), 0 0 24px rgba(0,0,0,.8)"
       }}
     >
-      {parts.map((part, index) => {
-        if (/^\s+$/u.test(part)) return part;
-        const duplicate = headlineWords.has(normalizeWord(part));
-        return (
-          <span
-            key={index}
-            style={{ visibility: duplicate ? "hidden" : "visible" }}
-          >
-            {part}
-          </span>
-        );
-      })}
+      {scene.narration}
     </div>
   );
 };
