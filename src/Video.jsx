@@ -9,6 +9,7 @@ import {
   delayRender,
   interpolate,
   spring,
+  staticFile,
   useCurrentFrame,
   useVideoConfig
 } from "remotion";
@@ -91,7 +92,7 @@ const QuestionTemplate = ({ text }) => (
       {text}
     </div>
   </div>
-};
+);
 
 const TemplateText = ({ template, text }) => {
   if (template === "list") {
