@@ -125,7 +125,7 @@ const SceneIcon = ({ name }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        transform: \`translateY(${floatY}px) scale(${0.72 + entrance * 0.28})\`,
+        transform: `translateY(${floatY}px) scale(${0.72 + entrance * 0.28})`,
         opacity: interpolate(frame, [0, 5], [0.25, 1], clamp),
         filter: "drop-shadow(0 0 18px rgba(72,230,242,.55))"
       }}
@@ -177,12 +177,12 @@ const KineticText = ({ scene, isHook }) => {
 
         return (
           <span
-            key={\`${index}-${word}\`}
+            key={`${index}-${word}`}
             style={{
               display: "inline-block",
               color: active ? "#FFE082" : "#FFFFFF",
               opacity: interpolate(wordFrame, [0, 3], [0.08, 1], clamp),
-              transform: \`translateY(${(1 - pop) * 32}px) scale(${0.68 + pop * 0.32})\`,
+              transform: `translateY(${(1 - pop) * 32}px) scale(${0.68 + pop * 0.32})`,
               textShadow: active
                 ? "0 0 10px #FFE082, 0 0 26px rgba(255,224,130,.9), 0 5px 18px rgba(0,0,0,.9)"
                 : "0 5px 18px rgba(0,0,0,.9)"
@@ -212,17 +212,17 @@ const SceneLayer = ({ scene, index, videoId }) => {
   let transitionStyle = {};
   if (scene.transition === "slide") {
     transitionStyle = {
-      transform: \`translateX(${(1 - entrance) * 135}px) scale(${0.98 + entrance * 0.02})\`
+      transform: `translateX(${(1 - entrance) * 135}px) scale(${0.98 + entrance * 0.02})`
     };
   } else if (scene.transition === "glitch") {
     const jitter = frame < 7 ? Math.sin(frame * 5.2) * (7 - frame) * 2 : 0;
     transitionStyle = {
-      transform: \`translateX(${jitter}px) scale(${0.94 + entrance * 0.06})\`,
+      transform: `translateX(${jitter}px) scale(${0.94 + entrance * 0.06})`,
       filter: frame < 7 ? "saturate(1.5) contrast(1.12)" : "none"
     };
   } else {
     transitionStyle = {
-      transform: \`scale(${0.82 + entrance * 0.18})\`
+      transform: `scale(${0.82 + entrance * 0.18})`
     };
   }
 
@@ -232,7 +232,7 @@ const SceneLayer = ({ scene, index, videoId }) => {
         style={{
           position: "absolute",
           inset: -24,
-          transform: \`translate(${cameraX}px, ${cameraY}px) scale(${cameraScale})\`
+          transform: `translate(${cameraX}px, ${cameraY}px) scale(${cameraScale})`
         }}
       >
         <VisualBackground
@@ -337,11 +337,11 @@ const WordSubtitles = ({ words, fps }) => {
 
         return (
           <span
-            key={\`${word.start}-${realIndex}\`}
+            key={`${word.start}-${realIndex}`}
             style={{
               display: "inline-block",
               color: active ? "#FFE082" : "#FFFFFF",
-              transform: active ? \`scale(${0.94 + pop * 0.12})\` : "scale(1)",
+              transform: active ? `scale(${0.94 + pop * 0.12})` : "scale(1)",
               unicodeBidi: "isolate"
             }}
           >
@@ -378,7 +378,7 @@ const BrandOutro = () => {
           opacity: contentOpacity,
           fontSize: 100,
           fontWeight: 900,
-          transform: \`scale(${0.78 + scale * 0.22})\`,
+          transform: `scale(${0.78 + scale * 0.22})`,
           color: "#FFE082",
           textShadow: "0 0 28px rgba(255,224,130,.55)"
         }}
@@ -445,7 +445,7 @@ export const Video = ({
         const duration = Math.max(1, scene.endFrame - scene.startFrame);
         return (
           <Sequence
-            key={\`${index}-${scene.startFrame}\`}
+            key={`${index}-${scene.startFrame}`}
             from={scene.startFrame}
             durationInFrames={duration}
           >
@@ -486,7 +486,7 @@ export const Video = ({
         }}
       >
         <div style={{
-          width: \`${progress}%\`,
+          width: `${progress}%`,
           height: "100%",
           background: "#FFE082",
           boxShadow: "0 0 18px #FFE082"

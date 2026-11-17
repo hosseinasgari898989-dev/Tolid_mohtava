@@ -16,7 +16,7 @@ function writeOutputs(values) {
   if (!output) return;
   fs.appendFileSync(
     output,
-    Object.entries(values).map(([key, value]) => \`${key}=${value}\`).join("\n") + "\n"
+    Object.entries(values).map(([key, value]) => `${key}=${value}`).join("\n") + "\n"
   );
 }
 
@@ -38,83 +38,83 @@ function validateBank(bank) {
 
   const seenIds = new Set();
   for (const [index, video] of bank.entries()) {
-    const label = \`content_bank.json item ${index + 1}\`;
+    const label = `content_bank.json item ${index + 1}`;
     if (!video || typeof video !== "object" || Array.isArray(video)) {
-      throw new Error(\`${label} must be an object.\`);
+      throw new Error(`${label} must be an object.`);
     }
     if (typeof video.id !== "string" || !video.id.trim()) {
-      throw new Error(\`${label}: id must be a non-empty string.\`);
+      throw new Error(`${label}: id must be a non-empty string.`);
     }
     if (seenIds.has(video.id)) {
-      throw new Error(\`Duplicate video id: ${video.id}\`);
+      throw new Error(`Duplicate video id: ${video.id}`);
     }
     seenIds.add(video.id);
 
     if (!["pending", "done"].includes(video.status)) {
-      throw new Error(\`${label} (${video.id}): status must be pending or done.\`);
+      throw new Error(`${label} (${video.id}): status must be pending or done.`);
     }
     for (const field of ["title", "voiceover", "caption"]) {
       if (typeof video[field] !== "string" || !video[field].trim()) {
-        throw new Error(\`${label} (${video.id}): ${field} must be non-empty.\`);
+        throw new Error(`${label} (${video.id}): ${field} must be non-empty.`);
       }
     }
     if (!templates.has(video.template)) {
-      throw new Error(\`${label} (${video.id}): invalid template.\`);
+      throw new Error(`${label} (${video.id}): invalid template.`);
     }
 
     if (video.tts_provider !== "edge") {
-      throw new Error(\`${label} (${video.id}): only tts_provider=edge is implemented.\`);
+      throw new Error(`${label} (${video.id}): only tts_provider=edge is implemented.`);
     }
     if (typeof video.voice !== "string" || !/^fa-IR-[A-Za-z]+Neural$/.test(video.voice)) {
-      throw new Error(\`${label} (${video.id}): voice must be a Persian Edge Neural voice.\`);
+      throw new Error(`${label} (${video.id}): voice must be a Persian Edge Neural voice.`);
     }
     if (typeof video.rate !== "string" || !/^[+-]\d+%$/.test(video.rate)) {
-      throw new Error(\`${label} (${video.id}): rate must use a value such as +6%.\`);
+      throw new Error(`${label} (${video.id}): rate must use a value such as +6%.`);
     }
     if (typeof video.pitch !== "string" || !/^[+-]\d+Hz$/.test(video.pitch)) {
-      throw new Error(\`${label} (${video.id}): pitch must use a value such as +0Hz.\`);
+      throw new Error(`${label} (${video.id}): pitch must use a value such as +0Hz.`);
     }
 
     if (!Array.isArray(video.scenes) || video.scenes.length === 0) {
-      throw new Error(\`${label} (${video.id}): scenes must be a non-empty array.\`);
+      throw new Error(`${label} (${video.id}): scenes must be a non-empty array.`);
     }
 
     let previousVisual = null;
     const narrationTokens = [];
     for (const [sceneIndex, scene] of video.scenes.entries()) {
-      const sceneLabel = \`${label} (${video.id}) scene ${sceneIndex + 1}\`;
+      const sceneLabel = `${label} (${video.id}) scene ${sceneIndex + 1}`;
       if (!scene || typeof scene !== "object" ||
           typeof scene.text_on_screen !== "string" || !scene.text_on_screen.trim()) {
-        throw new Error(\`${sceneLabel}: text_on_screen must be non-empty.\`);
+        throw new Error(`${sceneLabel}: text_on_screen must be non-empty.`);
       }
       if (typeof scene.narration !== "string" || !scene.narration.trim()) {
-        throw new Error(\`${sceneLabel}: narration must be non-empty.\`);
+        throw new Error(`${sceneLabel}: narration must be non-empty.`);
       }
 
       const screenWords = scene.text_on_screen.trim().split(/\s+/u);
       if (screenWords.length > 7) {
-        throw new Error(\`${sceneLabel}: on-screen text has ${screenWords.length} words; maximum is 7.\`);
+        throw new Error(`${sceneLabel}: on-screen text has ${screenWords.length} words; maximum is 7.`);
       }
 
       if (scene.highlight !== undefined) {
         if (typeof scene.highlight !== "string" ||
             !normalizedTokens(scene.text_on_screen).includes(normalizedTokens(scene.highlight)[0])) {
-          throw new Error(\`${sceneLabel}: highlight must be a word contained in text_on_screen.\`);
+          throw new Error(`${sceneLabel}: highlight must be a word contained in text_on_screen.`);
         }
       }
       if (scene.visual !== undefined && !VISUALS.has(scene.visual)) {
-        throw new Error(\`${sceneLabel}: invalid visual style.\`);
+        throw new Error(`${sceneLabel}: invalid visual style.`);
       }
       if (scene.visual && previousVisual === scene.visual) {
-        throw new Error(\`${sceneLabel}: background style must change every scene.\`);
+        throw new Error(`${sceneLabel}: background style must change every scene.`);
       }
       if (scene.visual) previousVisual = scene.visual;
 
       if (scene.icon !== undefined && !ICONS.has(scene.icon)) {
-        throw new Error(\`${sceneLabel}: unsupported icon.\`);
+        throw new Error(`${sceneLabel}: unsupported icon.`);
       }
       if (scene.transition !== undefined && !TRANSITIONS.has(scene.transition)) {
-        throw new Error(\`${sceneLabel}: transition must be zoom, slide, or glitch.\`);
+        throw new Error(`${sceneLabel}: transition must be zoom, slide, or glitch.`);
       }
       narrationTokens.push(...normalizedTokens(scene.narration));
     }
@@ -123,7 +123,7 @@ function validateBank(bank) {
     if (narrationTokens.length !== voiceTokens.length ||
         narrationTokens.some((token, i) => token !== voiceTokens[i])) {
       throw new Error(
-        \`${label} (${video.id}): scene narration must cover the voiceover exactly, in order, with no missing or extra words.\`
+        `${label} (${video.id}): scene narration must cover the voiceover exactly, in order, with no missing or extra words.`
       );
     }
 
@@ -132,11 +132,11 @@ function validateBank(bank) {
       (Array.isArray(video.hashtags) && video.hashtags.length > 0 &&
         video.hashtags.every(tag => typeof tag === "string" && tag.trim()));
     if (!validHashtags) {
-      throw new Error(\`${label} (${video.id}): hashtags must be a non-empty string or array.\`);
+      throw new Error(`${label} (${video.id}): hashtags must be a non-empty string or array.`);
     }
   }
 
-  console.log(\`Validated ${bank.length} videos, narration coverage, scene length, highlights, icons, transitions and TTS configuration.\`);
+  console.log(`Validated ${bank.length} videos, narration coverage, scene length, highlights, icons, transitions and TTS configuration.`);
 }
 
 function mapSceneTimings(scenes, words) {
@@ -162,14 +162,14 @@ function mapSceneTimings(scenes, words) {
     }
     if (found < 0) {
       throw new Error(
-        \`Real Edge TTS word timings do not contain scene ${sceneIndex + 1} narration in order. Refusing to estimate sync.\`
+        `Real Edge TTS word timings do not contain scene ${sceneIndex + 1} narration in order. Refusing to estimate sync.`
       );
     }
 
     const first = timingTokens[found];
     const last = timingTokens[found + expected.length - 1];
     if (!Number.isFinite(first.start) || !Number.isFinite(last.end) || last.end <= first.start) {
-      throw new Error(\`Invalid real word timings in scene ${sceneIndex + 1}.\`);
+      throw new Error(`Invalid real word timings in scene ${sceneIndex + 1}.`);
     }
     cursor = found + expected.length;
     return { first, last };
@@ -182,7 +182,7 @@ function mapSceneTimings(scenes, words) {
       ? matched[index + 1].first.start
       : spokenEndSeconds;
     if (endSeconds <= startSeconds) {
-      throw new Error(\`Scene ${index + 1} has a non-positive duration.\`);
+      throw new Error(`Scene ${index + 1} has a non-positive duration.`);
     }
     return {
       textOnScreen: scene.text_on_screen,
@@ -214,7 +214,7 @@ async function main() {
     : bank.find(item => item.status === "pending");
 
   if (!video) {
-    if (requestedId) throw new Error(\`Requested video id not found: ${requestedId}\`);
+    if (requestedId) throw new Error(`Requested video id not found: ${requestedId}`);
     console.log("No pending videos found.");
     writeOutputs({ has_video: "false", has_voice_samples: "false" });
     return;
@@ -233,7 +233,7 @@ async function main() {
   const audioPath = "public/audio.mp3";
 
   fs.writeFileSync(voicePath, video.voiceover.trim(), "utf8");
-  console.log(\`Creating ${video.voice} voiceover (${video.rate}, ${video.pitch})...\`);
+  console.log(`Creating ${video.voice} voiceover (${video.rate}, ${video.pitch})...`);
 
   runTts([
     voicePath, rawVoicePath, wordsPath,
@@ -290,7 +290,7 @@ async function main() {
     .slice(0, 5)
     .join(" ");
   const captionText = [video.caption.trim(), captionHashtags].filter(Boolean).join("\n\n");
-  const captionPath = \`out/${video.id}-caption.txt\`;
+  const captionPath = `out/${video.id}-caption.txt`;
   fs.writeFileSync(captionPath, captionText, "utf8");
 
   const props = {
@@ -304,11 +304,11 @@ async function main() {
   const propsPath = "out/props.json";
   fs.writeFileSync(propsPath, JSON.stringify(props, null, 2), "utf8");
 
-  const videoPath = \`out/${video.id}.mp4\`;
+  const videoPath = `out/${video.id}.mp4`;
   console.log("Rendering the V2 motion-graphics video (10-minute render guard)...");
   execFileSync("npx", [
     "remotion", "render", "src/index.jsx", "Video", videoPath,
-    \`--props=${propsPath}\`,
+    `--props=${propsPath}`,
     "--codec=h264", "--crf=23", "--pixel-format=yuv420p",
     "--concurrency=2"
   ], { stdio: "inherit", timeout: 10 * 60 * 1000 });
@@ -327,7 +327,7 @@ async function main() {
     throw new Error("Rendered video duration is shorter than its narration.");
   }
 
-  console.log(\`Successfully rendered V2 ${video.id} (${renderedDuration.toFixed(2)}s).\`);
+  console.log(`Successfully rendered V2 ${video.id} (${renderedDuration.toFixed(2)}s).`);
 
   const outputs = {
     has_video: "true",
