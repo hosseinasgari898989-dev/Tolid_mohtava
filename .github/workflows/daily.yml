@@ -8,6 +8,11 @@ on:
         required: false
         type: string
         default: "brain-tired-001"
+  push:
+    branches:
+      - fix/v3-regression-2026-11-18
+    paths:
+      - .github/workflows/daily.yml
 
 permissions:
   contents: write
@@ -54,7 +59,7 @@ jobs:
       - name: Build video
         id: pipeline
         env:
-          VIDEO_ID: ${{ inputs.video_id }}
+          VIDEO_ID: ${{ inputs.video_id || 'brain-tired-001' }}
         run: node scripts/pipeline.mjs
 
       - name: Upload video and caption to GitHub Release
