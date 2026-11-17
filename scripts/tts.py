@@ -1,62 +1,38 @@
+import argparse
 import asyncio
 import json
-import subprocess
 import sys
 from pathlib import Path
 
 import edge_tts
 
-VOICE = "fa-IR-FaridNeural"
 TICKS_PER_SECOND = 10_000_000
 
 
-def get_audio_duration(audio_path):
-    """Read the actual media duration using FFprobe."""
-    result = subprocess.run(
-        [
-            "ffprobe",
-            "-v", "error",
-            "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1",
-            str(audio_path),
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-
-    duration = float(result.stdout.strip())
-
-    if duration <= 0:
-        raise ValueError("FFprobe returned a non-positive audio duration.")
-
-    return duration
-
-
-async def create_audio(text, audio_path, words_path):
+async def create_edge_voice(text, audio_path, words_path, voice, rate, pitch):
+    """Generate Edge Neural audio and, when requested, its real word timings."""
     audio_path = Path(audio_path)
-    words_path = Path(words_path)
-
     audio_path.parent.mkdir(parents=True, exist_ok=True)
-    words_path.parent.mkdir(parents=True, exist_ok=True)
 
-    communicator = edge_tts.Communicate(
-        text,
-        VOICE,
-        boundary="WordBoundary",
-    )
+    kwargs = {
+        "text": text,
+        "voice": voice,
+        "rate": rate,
+        "pitch": pitch,
+    }
+    if words_path is not None:
+        kwargs["boundary"] = "WordBoundary"
 
+    communicator = edge_tts.Communicate(**kwargs)
     words = []
 
     with audio_path.open("wb") as audio:
         async for chunk in communicator.stream():
             if chunk["type"] == "audio":
                 audio.write(chunk["data"])
-
-            elif chunk["type"] == "WordBoundary":
+            elif words_path is not None and chunk["type"] == "WordBoundary":
                 start = chunk["offset"] / TICKS_PER_SECOND
                 duration = chunk["duration"] / TICKS_PER_SECOND
-
                 words.append({
                     "text": chunk["text"],
                     "start": start,
@@ -66,50 +42,95 @@ async def create_audio(text, audio_path, words_path):
     if not audio_path.exists() or audio_path.stat().st_size == 0:
         raise RuntimeError("Edge TTS did not create an audio file.")
 
-    # Some voices / service responses may omit WordBoundary events.
-    # Keep the real audio and estimate evenly spaced word timings.
-    if not words:
-        duration = get_audio_duration(audio_path)
-        tokens = text.split()
-
-        if not tokens:
+    if words_path is not None:
+        if not words:
             raise RuntimeError(
-                "Cannot create fallback timings from empty voiceover text."
+                "Edge TTS returned no WordBoundary events. "
+                "Exact scene/subtitle sync cannot be validated."
             )
+        words_path = Path(words_path)
+        words_path.parent.mkdir(parents=True, exist_ok=True)
+        words_path.write_text(
+            json.dumps(words, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        print(f"Generated {len(words)} real word timings for {voice}.")
 
-        print(
-            "WARNING: Edge TTS returned no WordBoundary events for "
-            f"{VOICE}. Using evenly distributed timings over the "
-            f"measured audio duration ({duration:.3f} seconds).",
-            file=sys.stderr,
+    print(f"Generated voice audio with {voice}.")
+
+
+async def create_voice(provider, text, audio_path, words_path, voice, rate, pitch):
+    """Provider boundary for future TTS backends; only free Edge TTS is enabled."""
+    if provider == "edge":
+        await create_edge_voice(
+            text, audio_path, words_path, voice, rate, pitch
+        )
+        return
+
+    # Future providers may read their own credential from os.environ here.
+    # No credential or external provider is used by this version.
+    raise ValueError(
+        f"Unsupported tts_provider '{provider}'. This version supports only 'edge'."
+    )
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input", nargs="?")
+    parser.add_argument("audio", nargs="?")
+    parser.add_argument("words", nargs="?")
+    parser.add_argument("--provider", default="edge")
+    parser.add_argument("--voice", default="fa-IR-DilaraNeural")
+    parser.add_argument("--rate", default="+6%")
+    parser.add_argument("--pitch", default="+0Hz")
+    parser.add_argument("--sample", action="store_true")
+    parser.add_argument("--text", default="")
+    parser.add_argument("--output", default="")
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+
+    if args.sample:
+        if not args.text.strip() or not args.output:
+            raise ValueError("--sample requires non-empty --text and --output.")
+        asyncio.run(create_voice(
+            args.provider,
+            args.text.strip(),
+            args.output,
+            None,
+            args.voice,
+            args.rate,
+            args.pitch,
+        ))
+        return
+
+    if not args.input or not args.audio or not args.words:
+        raise ValueError(
+            "Usage: tts.py INPUT AUDIO WORDS "
+            "[--provider edge] [--voice fa-IR-DilaraNeural] "
+            "[--rate +6%] [--pitch +0Hz]"
         )
 
-        interval = duration / len(tokens)
-        words = [
-            {
-                "text": token,
-                "start": index * interval,
-                "end": (index + 1) * interval,
-            }
-            for index, token in enumerate(tokens)
-        ]
-
-    with words_path.open("w", encoding="utf-8") as file:
-        json.dump(words, file, ensure_ascii=False, indent=2)
-
-    print(f"Generated {len(words)} word timings.")
-
-
-if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: python tts.py input.txt audio.mp3 words.json")
-        sys.exit(1)
-
-    input_path, audio_path, words_path = sys.argv[1:]
-
-    text = Path(input_path).read_text(encoding="utf-8").strip()
-
+    text = Path(args.input).read_text(encoding="utf-8").strip()
     if not text:
         raise ValueError("Voiceover is empty.")
 
-    asyncio.run(create_audio(text, audio_path, words_path))
+    asyncio.run(create_voice(
+        args.provider,
+        text,
+        args.audio,
+        args.words,
+        args.voice,
+        args.rate,
+        args.pitch,
+    ))
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as error:
+        print(f"TTS failed: {error}", file=sys.stderr)
+        raise
