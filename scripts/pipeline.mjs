@@ -96,8 +96,8 @@ function validateBank(bank) {
       }
 
       const screenWords = scene.text_on_screen.trim().split(/\s+/u);
-      if (screenWords.length > 7) {
-        throw new Error(`${sceneLabel}: on-screen text has ${screenWords.length} words; maximum is 7.`);
+      if (screenWords.length < 2 || screenWords.length > 4) {
+        throw new Error(`${sceneLabel}: headline must contain 2–4 words; received ${screenWords.length}.`);
       }
 
       if (scene.highlight !== undefined) {
@@ -140,7 +140,7 @@ function validateBank(bank) {
     }
   }
 
-  console.log(`Validated ${bank.length} videos, narration coverage, scene length, highlights, icons, transitions and TTS configuration.`);
+  console.log(`Validated ${bank.length} videos, 2–4-word headlines, narration coverage, highlights, icons, transitions and TTS configuration.`);
 }
 
 function mapSceneTimings(scenes, words) {
@@ -316,7 +316,7 @@ async function main() {
   fs.writeFileSync(propsPath, JSON.stringify(props, null, 2), "utf8");
 
   const videoPath = `out/${video.id}.mp4`;
-  console.log("Rendering the V2 motion-graphics video (10-minute render guard)...");
+  console.log("Rendering the V3 polished motion-graphics video (10-minute render guard)...");
   execFileSync("npx", [
     "remotion", "render", "src/index.jsx", "Video", videoPath,
     `--props=${propsPath}`,
@@ -338,7 +338,7 @@ async function main() {
     throw new Error("Rendered video duration is shorter than its narration.");
   }
 
-  console.log(`Successfully rendered V2 ${video.id} (${renderedDuration.toFixed(2)}s).`);
+  console.log(`Successfully rendered V3 ${video.id} (${renderedDuration.toFixed(2)}s).`);
 
   const outputs = {
     has_video: "true",
