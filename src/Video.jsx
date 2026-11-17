@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import {
   AbsoluteFill,
+  Audio,
   Sequence,
   cancelRender,
   continueRender,
@@ -9,17 +10,13 @@ import {
   interpolate,
   spring,
   useCurrentFrame,
-  useVideoConfig,
-  staticFile
+  useVideoConfig
 } from "remotion";
-
-import {
-  Audio,
-  Video as RemotionVideo
-} from "@remotion/media";
 
 import "@fontsource/vazirmatn/400.css";
 import "@fontsource/vazirmatn/700.css";
+
+import { VisualBackground } from "./backgrounds/NeonBackgrounds";
 
 const clamp = {
   extrapolateLeft: "clamp",
@@ -55,7 +52,7 @@ const FactsTemplate = ({ text }) => (
   </div>
 );
 
-// Template 2: numbered lists.
+// Template 2: show only the supplied numbered text.
 const ListTemplate = ({ text }) => (
   <div style={baseFont}>
     <div style={{
@@ -94,7 +91,7 @@ const QuestionTemplate = ({ text }) => (
       {text}
     </div>
   </div>
-);
+};
 
 const TemplateText = ({ template, text }) => {
   if (template === "list") {
@@ -106,25 +103,19 @@ const TemplateText = ({ template, text }) => {
   }
 
   return <FactsTemplate text={text} />;
-}
+};
 
-// One scene with zoom and a crossfade transition.
+// One original animated background and one text layer per scene.
 const SceneLayer = ({
   scene,
   index,
   total,
+  videoId,
   template,
   duration
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-
-  const scale = interpolate(
-    frame,
-    [0, duration],
-    [1, 1.08],
-    clamp
-  );
 
   const fadeIn = index === 0
     ? 1
@@ -152,23 +143,10 @@ const SceneLayer = ({
 
   return (
     <AbsoluteFill style={{ opacity }}>
-      <RemotionVideo
-        src={staticFile(scene.clipPath)}
-        muted
-        loop
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          transform: `scale(${scale})`
-        }}
-      />
-
-      <AbsoluteFill
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.58))"
-        }}
+      <VisualBackground
+        visual={scene.visual}
+        videoId={videoId}
+        sceneIndex={index}
       />
 
       <AbsoluteFill
@@ -197,7 +175,7 @@ const SceneLayer = ({
   );
 };
 
-// Word-by-word subtitles.
+// Word-by-word RTL subtitles.
 const WordSubtitles = ({ words, fps }) => {
   const frame = useCurrentFrame();
   const seconds = frame / fps;
@@ -208,9 +186,9 @@ const WordSubtitles = ({ words, fps }) => {
 
   let activeIndex = 0;
 
-  for (let i = 0; i < words.length; i++) {
-    if (seconds >= words[i].start) {
-      activeIndex = i;
+  for (let index = 0; index < words.length; index++) {
+    if (seconds >= words[index].start) {
+      activeIndex = index;
     } else {
       break;
     }
@@ -264,8 +242,8 @@ const WordSubtitles = ({ words, fps }) => {
   );
 };
 
-// Branded outro.
-const BrandCard = ({ title, outro = false }) => {
+// Branded outro only. No intro: the first scene is the hook.
+const BrandOutro = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -288,7 +266,7 @@ const BrandCard = ({ title, outro = false }) => {
   return (
     <AbsoluteFill
       style={{
-        background: "rgba(7, 12, 32, 0.78)",
+        background: "rgba(7, 12, 32, 0.82)",
         alignItems: "center",
         justifyContent: "center",
         opacity,
@@ -310,20 +288,21 @@ const BrandCard = ({ title, outro = false }) => {
         fontSize: 34,
         marginTop: 24
       }}>
-        {outro ? "فالو کن برای فردا" : title}
+        فالو کن برای فردا
       </div>
     </AbsoluteFill>
   );
 };
 
 export const Video = ({
+  videoId,
   title,
   template,
   scenes,
   words,
   audioDuration
 }) => {
-  // Hold rendering until both local Vazirmatn weights are ready.
+  // Wait for local Vazirmatn regular and bold font files.
   const [fontHandle] = useState(
     () => delayRender("Loading Vazirmatn regular and bold fonts")
   );
@@ -388,7 +367,7 @@ export const Video = ({
       fontFamily: "Vazirmatn, sans-serif"
     }}>
 
-      {/* Background scene timeline */}
+      {/* Background scenes overlap for a 12-frame crossfade. */}
       {scenes.map((scene, index) => {
         const start = index * (sceneSpan - overlap);
 
@@ -401,7 +380,7 @@ export const Video = ({
 
         return (
           <Sequence
-            key={scene.clipPath}
+            key={`${index}-${scene.visual || "auto"}`}
             from={start}
             durationInFrames={duration}
           >
@@ -409,6 +388,7 @@ export const Video = ({
               scene={scene}
               index={index}
               total={count}
+              videoId={videoId}
               template={template}
               duration={duration}
             />
@@ -416,10 +396,8 @@ export const Video = ({
         );
       })}
 
-      {/* Voiceover */}
       <Audio src={staticFile("audio.mp3")} volume={1} />
 
-      {/* Brand watermark */}
       <div
         dir="rtl"
         style={{
@@ -435,10 +413,8 @@ export const Video = ({
         ذهن‌خوان
       </div>
 
-      {/* Subtitles */}
       <WordSubtitles words={words} fps={fps} />
 
-      {/* Progress bar */}
       <div
         style={{
           position: "absolute",
@@ -458,14 +434,12 @@ export const Video = ({
         />
       </div>
 
-      {/* Outro */}
       <Sequence
         from={Math.max(0, durationInFrames - 48)}
         durationInFrames={48}
       >
-        <BrandCard title={title} outro />
+        <BrandOutro />
       </Sequence>
-
     </AbsoluteFill>
   );
 };

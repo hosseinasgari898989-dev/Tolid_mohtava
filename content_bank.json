@@ -8,19 +8,19 @@
     "scenes": [
       {
         "text_on_screen": "شاید تنبل نیستی!",
-        "stock_keywords": "tired student sitting at desk"
+        "visual": "neural"
       },
       {
         "text_on_screen": "۱. کارهای ساده سخت شدن",
-        "stock_keywords": "person struggling to focus studying"
+        "visual": "particles"
       },
       {
         "text_on_screen": "۲. تمرکزت زود می‌پره",
-        "stock_keywords": "distracted person working laptop"
+        "visual": "waves"
       },
       {
         "text_on_screen": "۳. شروع کردن سخته",
-        "stock_keywords": "person drinking water relaxing"
+        "visual": "geometry"
       }
     ],
     "caption": "گاهی ذهنت به کمی استراحت نیاز داره، نه سرزنش. تو کدوم‌یک از این سه نشونه رو تجربه کردی؟",
@@ -44,19 +44,19 @@
     "scenes": [
       {
         "text_on_screen": "چرا کار نصفه یادت می‌مونه؟",
-        "stock_keywords": "unfinished notebook on desk"
+        "visual": "particles"
       },
       {
         "text_on_screen": "اثر زیگارنیک",
-        "stock_keywords": "person thinking looking out window"
+        "visual": "neural"
       },
       {
         "text_on_screen": "کار ناتمام در ذهن می‌مونه",
-        "stock_keywords": "incomplete puzzle close up"
+        "visual": "geometry"
       },
       {
         "text_on_screen": "قدم بعدی رو یادداشت کن",
-        "stock_keywords": "writing daily task list notebook"
+        "visual": "waves"
       }
     ],
     "caption": "گاهی کارهای ناتمام بیشتر از چیزی که فکر می‌کنیم در ذهنمان باقی می‌مانند. تو چه کار نیمه‌تمامی داری؟",
@@ -79,20 +79,16 @@
     "voiceover": "برای شروع یک کار لازم نیست از همون اول کلی انرژی بذاری. قانون دو دقیقه رو امتحان کن: فقط دو دقیقه شروعش کن. می‌خوای درس بخونی؟ کتاب رو باز کن و یک پاراگراف بخون. می‌خوای مرتب‌کاری کنی؟ فقط یک قسمت کوچیک رو جمع کن. هدف، تموم کردن کار نیست؛ فقط شکستن سختی شروعه. بعدش خودت تصمیم بگیر ادامه بدی یا نه. فالو کن برای فردا.",
     "scenes": [
       {
-        "text_on_screen": "شروع کردن سخته؟",
-        "stock_keywords": "person looking at messy desk"
+        "text_on_screen": "شروع کردن سخته؟"
       },
       {
-        "text_on_screen": "قانون ۲ دقیقه",
-        "stock_keywords": "setting timer on smartphone"
+        "text_on_screen": "قانون ۲ دقیقه"
       },
       {
-        "text_on_screen": "فقط یک قدم کوچیک",
-        "stock_keywords": "opening notebook studying"
+        "text_on_screen": "فقط یک قدم کوچیک"
       },
       {
-        "text_on_screen": "هدف فقط شروع کردنه",
-        "stock_keywords": "organizing clean workspace"
+        "text_on_screen": "هدف فقط شروع کردنه"
       }
     ],
     "caption": "قرار نیست در دو دقیقه همه‌چیز رو تموم کنی؛ فقط شروع کن. امروز چه کاری رو با این روش شروع می‌کنی؟",

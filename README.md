@@ -1,137 +1,50 @@
 # Zehn-Khan Video Factory
 
-A free Phase 1 Persian short-video factory.
+A free Persian short-video factory built with Remotion.
 
 ## Features
 
-- Persian voice generation using Edge TTS
-- fa-IR-FaridNeural voice
-- Word-level subtitle timings
-- Pexels vertical stock footage
-- Used clip ID tracking
-- Three Remotion templates:
-  - facts
-  - list
-  - question
-- Vazirmatn bundled font
-- RTL Persian text
-- Animated subtitles
-- 1080x1920 video
-- 30 FPS
-- H.264 MP4
-- GitHub Releases
-- Automatic content status updates
+- Persian voiceover with Edge TTS (fa-IR-FaridNeural)
+- Word-level subtitle timings, with an even-split fallback
+- Four original animated backgrounds: neural, particles, waves and geometry
+- Three text templates: facts, list and question
+- RTL Persian text with the bundled Vazirmatn font
+- 1080x1920, 30 FPS, H.264 MP4
+- GitHub Releases for video and caption files
 
-## Requirements
+## No stock footage or API keys
 
-- GitHub repository
-- Free Pexels API key
-- Cloudflare Worker
-- Fine-grained GitHub token
+All backgrounds are generated locally in Remotion with React, SVG and CSS.
+There are no stock-video providers, stock downloads or API keys.
 
-## GitHub Secrets
-
-Add this repository secret:
-
-PEXELS_API_KEY
-
-Do not put API keys in source code.
+Edge TTS still needs an internet connection to generate the Persian voice.
+It does not need a project API key.
 
 ## Workflow
 
-The workflow only uses workflow_dispatch.
-
+The GitHub Actions workflow uses workflow_dispatch only.
 It processes one pending video per run.
 
-When a video is finished:
+A successful run renders the MP4 and caption, uploads both to a GitHub
+Release, then marks that video as done in content_bank.json.
 
-1. MP4 is rendered.
-2. Caption TXT and Pexels credits TXT are created separately.
-3. The MP4, caption and credits files are uploaded to GitHub Releases.
-4. The video status becomes done.
-5. Used Pexels clip IDs are saved.
-6. Changes are committed to main.
+## Add a video
 
-## Release naming
+Add an object to content_bank.json with a unique ID, status pending,
+a title, voiceover, template, scenes, caption and hashtags.
 
-Each video gets this release tag:
+Allowed templates: facts, list, question.
 
-video-<id>
-
-Example:
-
-video-brain-tired-001
-
-## Cloudflare
-
-The Worker sends a workflow_dispatch request every day.
-
-Required Worker secrets:
-
-- GITHUB_PAT
-- MANUAL_TRIGGER_KEY
-
-Cron triggers use UTC.
-
-## Adding a video
-
-Edit content_bank.json.
-
-Add a new object with:
-
-- A unique ID
-- status: pending
-- A template name
-- Persian voiceover
-- At least one scene
-- English Pexels keywords
-- Caption
-- Hashtags
-
-Allowed templates:
-
-facts, list, question
+Each scene needs text_on_screen. The optional visual field can be:
+neural, particles, waves or geometry. Omit it to rotate styles
+automatically using the video ID as the animation seed.
 
 ## Troubleshooting
 
-### No video generated
-Check whether a pending video exists.
+- TTS failed: check internet access and Edge TTS availability.
+- No word timings: the pipeline falls back to evenly spaced timings.
+- Video too long: shorten the voiceover; videos must be under 59 seconds.
+- Font error: check the Vazirmatn package installation.
+- Push failed: check GitHub Actions write permission and branch protection.
 
-### Pexels 401
-Check PEXELS_API_KEY.
-
-### Pexels 429
-The API rate limit may have been reached.
-Try again later.
-
-### TTS failed
-Check the voice name and Edge TTS availability.
-
-### Video is too long
-Shorten the Persian voiceover.
-The pipeline rejects videos longer than 59 seconds.
-
-### No word timings
-Check whether Edge TTS returned WordBoundary events.
-
-### Remotion render failed
-Check FFmpeg, Node packages and video files.
-
-### Git push failed
-Check GITHUB_TOKEN write permission and branch protection.
-
-### GitHub release already exists
-The workflow uploads assets again using --clobber.
-
-### Repeated stock footage
-Check used_clips.json.
-Do not delete the clip history.
-
-## Important
-
-This project creates video files.
-It does not automatically publish to Instagram, TikTok or YouTube.
-
-Pexels footage must follow the applicable Pexels license and API rules.
-
-Remotion licensing terms must also be respected.
+Remotion licensing terms must be respected.
