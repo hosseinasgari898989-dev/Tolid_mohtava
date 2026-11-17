@@ -38,8 +38,9 @@ const baseFont = {
   color: "white"
 };
 
-const SceneIcon = ({ name }) => {
-  const frame = useCurrentFrame();
+const SceneIcon = ({ name, frameOverride }) => {
+  const currentFrame = useCurrentFrame();
+  const frame = frameOverride ?? currentFrame;
   const { fps } = useVideoConfig();
   const entrance = spring({
     frame,
@@ -120,8 +121,8 @@ const SceneIcon = ({ name }) => {
   return (
     <div
       style={{
-        width: 150,
-        height: 150,
+        width: 220,
+        height: 220,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -138,11 +139,12 @@ const SceneIcon = ({ name }) => {
   );
 };
 
-const KineticText = ({ scene, isHook }) => {
-  const frame = useCurrentFrame();
+const KineticText = ({ scene, isHook, frameOverride }) => {
+  const currentFrame = useCurrentFrame();
+  const frame = frameOverride ?? currentFrame;
   const { fps } = useVideoConfig();
   const words = scene.textOnScreen.trim().split(/\s+/u);
-  const fontSize = isHook ? 112 : 90;
+  const fontSize = isHook ? 122 : 118;
   const highlight = normalizeWord(scene.highlight || "");
 
   return (
@@ -150,10 +152,10 @@ const KineticText = ({ scene, isHook }) => {
       dir="rtl"
       style={{
         ...baseFont,
-        maxWidth: 940,
+        maxWidth: 960,
         fontSize,
         fontWeight: 900,
-        lineHeight: 1.55,
+        lineHeight: 1.3,
         display: "flex",
         flexWrap: "wrap",
         justifyContent: "center",
@@ -194,8 +196,9 @@ const KineticText = ({ scene, isHook }) => {
   );
 };
 
-const SceneLayer = ({ scene, index, videoId }) => {
-  const frame = useCurrentFrame();
+const SceneLayer = ({ scene, index, videoId, frameOverride }) => {
+  const currentFrame = useCurrentFrame();
+  const frame = frameOverride ?? currentFrame;
   const { fps } = useVideoConfig();
   const entrance = spring({
     frame,
@@ -237,6 +240,7 @@ const SceneLayer = ({ scene, index, videoId }) => {
           visual={scene.visual}
           videoId={videoId}
           sceneIndex={index}
+          frameOverride={frameOverride}
         />
       </div>
 
@@ -252,23 +256,24 @@ const SceneLayer = ({ scene, index, videoId }) => {
         <div
           style={{
             position: "absolute",
-            top: "23%",
+            top: "17%",
             left: 0,
             right: 0,
             display: "flex",
             justifyContent: "center"
           }}
         >
-          <SceneIcon name={scene.icon} />
+          <SceneIcon name={scene.icon} frameOverride={frameOverride} />
         </div>
 
         <div
           style={{
             position: "absolute",
-            top: "34%",
-            left: 58,
-            right: 58,
-            minHeight: 300,
+            top: "33%",
+            left: 72,
+            right: 72,
+            height: "25%",
+            minHeight: 280,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -276,75 +281,67 @@ const SceneLayer = ({ scene, index, videoId }) => {
             ...transitionStyle
           }}
         >
-          <KineticText scene={scene} isHook={index === 0} />
+          <KineticText scene={scene} isHook={index === 0} frameOverride={frameOverride} />
         </div>
       </AbsoluteFill>
     </AbsoluteFill>
   );
 };
 
-const WordSubtitles = ({ words, fps }) => {
+const SceneSubtitles = ({ scenes, fps, hideAfterFrame }) => {
   const frame = useCurrentFrame();
+  if (frame >= hideAfterFrame) return null;
+
   const seconds = frame / fps;
-  if (!Array.isArray(words) || words.length === 0) return null;
+  const scene = scenes.find(item =>
+    seconds >= item.startSeconds && seconds < item.endSeconds
+  );
+  if (!scene) return null;
 
-  let activeIndex = -1;
-  for (let index = 0; index < words.length; index++) {
-    if (seconds >= words[index].start) activeIndex = index;
-    else break;
-  }
-  if (activeIndex < 0 || seconds > words[words.length - 1].end + 0.04) {
-    return null;
-  }
+  const headlineWords = new Set(
+    scene.textOnScreen.trim().split(/\s+/u).map(normalizeWord).filter(Boolean)
+  );
+  const normalizedHeadline = scene.textOnScreen.trim()
+    .split(/\s+/u).map(normalizeWord).filter(Boolean).join(" ");
+  const normalizedNarration = scene.narration.trim()
+    .split(/\s+/u).map(normalizeWord).filter(Boolean).join(" ");
 
-  const first = Math.max(0, activeIndex - 1);
-  const visibleWords = words.slice(first, activeIndex + 1);
+  if (!normalizedNarration || normalizedHeadline === normalizedNarration) return null;
+
+  const parts = scene.narration.split(/(\s+)/u);
 
   return (
     <div
       dir="rtl"
       style={{
         position: "absolute",
-        top: "60%",
-        left: 58,
-        right: 58,
-        height: "10%",
+        top: "64%",
+        left: 72,
+        right: 72,
+        height: "14%",
         overflow: "hidden",
-        display: "flex",
-        flexWrap: "wrap",
-        justifyContent: "center",
-        alignContent: "center",
-        alignItems: "center",
-        gap: "4px 15px",
-        padding: 0,
+        display: "block",
+        padding: "10px 24px",
         ...baseFont,
-        fontSize: 56,
-        fontWeight: 900,
-        lineHeight: 1.45,
-        WebkitTextStroke: "2.5px #07101f",
+        maxWidth: 936,
+        margin: "0 auto",
+        fontSize: 48,
+        fontWeight: 800,
+        lineHeight: 1.5,
+        WebkitTextStroke: "1.5px #07101f",
         paintOrder: "stroke fill",
         textShadow: "0 4px 14px rgba(0,0,0,.98), 0 0 24px rgba(0,0,0,.8)"
       }}
     >
-      {visibleWords.map((word, index) => {
-        const realIndex = first + index;
-        const active = realIndex === activeIndex;
-        const elapsed = Math.max(0, frame - Math.round(word.start * fps));
-        const pop = active
-          ? spring({ frame: elapsed, fps, config: { damping: 11, stiffness: 190 } })
-          : 1;
-
+      {parts.map((part, index) => {
+        if (/^\s+$/u.test(part)) return part;
+        const duplicate = headlineWords.has(normalizeWord(part));
         return (
           <span
-            key={`${word.start}-${realIndex}`}
-            style={{
-              display: "inline-block",
-              color: active ? "#FFE082" : "#FFFFFF",
-              transform: active ? `scale(${0.94 + pop * 0.12})` : "scale(1)",
-              unicodeBidi: "isolate"
-            }}
+            key={index}
+            style={{ visibility: duplicate ? "hidden" : "visible" }}
           >
-            {word.text}
+            {part}
           </span>
         );
       })}
@@ -352,46 +349,56 @@ const WordSubtitles = ({ words, fps }) => {
   );
 };
 
-const BrandOutro = () => {
+const LOOP_FRAMES = 30;
+
+const LoopBridge = ({ scene, videoId }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const scale = spring({
-    frame,
-    fps,
-    config: { damping: 14, stiffness: 100 }
-  });
-  const contentOpacity = interpolate(frame, [0, 8, 37, 48], [0, 1, 1, 1], clamp);
+  const reverseFrame = Math.max(0, LOOP_FRAMES - 1 - frame);
+  const opacity = interpolate(frame, [0, 9], [0, 1], clamp);
+  const progress = interpolate(reverseFrame, [0, LOOP_FRAMES - 1], [0, 100], clamp);
 
   return (
-    <AbsoluteFill
-      style={{
-        background: "#080D20",
-        alignItems: "center",
-        justifyContent: "center",
-        ...baseFont,
-        zIndex: 20
-      }}
-    >
+    <AbsoluteFill style={{ opacity, zIndex: 20 }}>
+      <SceneLayer
+        scene={scene}
+        index={0}
+        videoId={videoId}
+        frameOverride={reverseFrame}
+      />
       <div
+        dir="rtl"
         style={{
-          opacity: contentOpacity,
-          fontSize: 100,
+          position: "absolute",
+          top: "13%",
+          right: 66,
+          color: "white",
+          fontSize: 38,
           fontWeight: 900,
-          transform: `scale(${0.78 + scale * 0.22})`,
-          color: "#FFE082",
-          textShadow: "0 0 28px rgba(255,224,130,.55)"
+          textShadow: "0 2px 14px black",
+          zIndex: 25
         }}
       >
         ذهن‌خوان
       </div>
-      <div style={{
-        opacity: contentOpacity,
-        fontSize: 42,
-        fontWeight: 700,
-        marginTop: 24,
-        textShadow: "0 4px 18px black"
-      }}>
-        فالو کن برای فردا
+      <div
+        style={{
+          position: "absolute",
+          top: "12%",
+          left: 0,
+          right: 0,
+          height: 7,
+          background: "rgba(255,255,255,.14)",
+          zIndex: 26
+        }}
+      >
+        <div
+          style={{
+            width: `${progress}%`,
+            height: "100%",
+            background: "#FFE082",
+            boxShadow: "0 0 18px #FFE082"
+          }}
+        />
       </div>
     </AbsoluteFill>
   );
@@ -432,7 +439,7 @@ export const Video = ({
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const progress = interpolate(frame, [0, durationInFrames - 1], [0, 100], clamp);
-  const outroFrom = Math.max(0, durationInFrames - 48);
+  const loopFrom = Math.max(0, durationInFrames - LOOP_FRAMES);
 
   return (
     <AbsoluteFill style={{
@@ -471,7 +478,7 @@ export const Video = ({
         ذهن‌خوان
       </div>
 
-      <WordSubtitles words={words} fps={fps} />
+      <SceneSubtitles scenes={scenes} fps={fps} hideAfterFrame={loopFrom} />
 
       <div
         style={{
@@ -493,10 +500,10 @@ export const Video = ({
       </div>
 
       <Sequence
-        from={outroFrom}
-        durationInFrames={Math.max(1, durationInFrames - outroFrom)}
+        from={loopFrom}
+        durationInFrames={Math.min(LOOP_FRAMES, durationInFrames - loopFrom)}
       >
-        <BrandOutro />
+        <LoopBridge scene={scenes[0]} videoId={videoId} />
       </Sequence>
     </AbsoluteFill>
   );
