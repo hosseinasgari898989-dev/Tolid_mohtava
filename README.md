@@ -46,7 +46,7 @@ It processes one pending video per run.
 When a video is finished:
 
 1. MP4 is rendered.
-2. Caption TXT is created.
+2. Caption TXT and Pexels credits TXT are created separately.
 3. The MP4, caption and credits files are uploaded to GitHub Releases.
 4. The video status becomes done.
 5. Used Pexels clip IDs are saved.
