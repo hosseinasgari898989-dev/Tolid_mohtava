@@ -8,11 +8,6 @@ on:
         required: false
         type: string
         default: "brain-tired-001"
-  push:
-    branches:
-      - fix/v3-regression-2026-11-18
-    paths:
-      - .github/workflows/daily.yml
 
 permissions:
   contents: write
