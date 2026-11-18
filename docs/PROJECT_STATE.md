@@ -48,8 +48,11 @@ Last verified: 2026-11-18
 
 - Feature branch: `feature/motion-kit-v1-2026-11-18`.
 - Pre-change backup: `backup/pre-motion-kit-v1-2026-11-18`.
-- Kit components, layouts, tokens, demo composition and the dedicated manual workflow are being added here.
-- Pending: green tests, rendered demo, two-second contact sheet and Release verification. Keep this branch unmerged until owner approval.
+- PR #3 is open: [Build Motion Kit V1 and kit-demo composition](https://github.com/hosseinasgari898989-dev/Tolid_mohtava/pull/3); base is `main` at `ee7dfa8d94c1cfca58c0387c4716ae1af8b7b4ac`.
+- Implemented on this branch: brand tokens, RTL/Persian-digit/layout helpers, reusable animated components, animated background pack, slide/wipe/zoom transitions, `kit-demo` composition, layout/data integration and a manual-only demo workflow.
+- Contact sheet supports two-second sampling. The demo explicitly skips loop comparison because it is not a looping video; Daily Video Factory keeps its first/last-frame loop check.
+- The saved GitHub browser session is expired. Daily main verification and the `kit-demo` render/Release remain pending a fresh sign-in and actual workflow runs.
+- Keep this branch unmerged until owner approval.
 
 ## Known issues / cautions
 
