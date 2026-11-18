@@ -36,7 +36,7 @@ export const IconBadge = ({ icon = "brain", label = "", accent = C.blue, size = 
       <div style={{ width: size, height: size, borderRadius: 26, display: "grid", placeItems: "center", color: accent, background: "linear-gradient(145deg, rgba(85,184,255,.19), rgba(167,139,250,.13))", border: "1px solid rgba(142,185,255,.34)", boxShadow: "0 0 38px " + accent + "33, inset 0 1px 0 rgba(255,255,255,.16)" }}>
         <Icon size={Math.round(size * 0.52)} strokeWidth={1.85} />
       </div>
-      {label ? <span style={{ ...baseText, color: C.muted, fontSize: 27, fontWeight: 700 }}>{label}</span> : null}
+      {label ? <span style={{ ...baseText, color: C.muted, fontSize: 27, fontWeight: 700 }}>{asDisplayText(label)}</span> : null}
     </div>
   );
 };
@@ -85,7 +85,7 @@ export const BigNumber = ({ value = 2, unit = "", label = "", prefix = "", suffi
   return (
     <div style={{ ...glass, padding: "34px 42px", textAlign: "center", transform: "scale(" + (0.94 + progress * 0.06) + ")", opacity: progress }}>
       <div style={{ ...baseText, color: C.muted, fontSize: 29, fontWeight: 700 }}>{asDisplayText(label)}</div>
-      <div style={{ ...baseText, color: accent, fontSize: 150, fontWeight: 900, lineHeight: 1.1, textShadow: "0 0 30px " + accent + "55" }}>{prefix}{shown}<span style={{ fontSize: 52, marginRight: 12 }}>{unit}{suffix}</span></div>
+      <div style={{ ...baseText, color: accent, fontSize: 150, fontWeight: 900, lineHeight: 1.1, textShadow: "0 0 30px " + accent + "55" }}>{prefix}{shown}<span style={{ fontSize: 52, marginRight: 12 }}>{asDisplayText(unit)}{asDisplayText(suffix)}</span></div>
     </div>
   );
 };
@@ -203,9 +203,9 @@ export const InfoCard = ({ title = "", body = "", icon = "sparkles", frameOverri
     <div style={{ ...glass, width: "100%", padding: "42px 46px", opacity: p, transform: "translateX(" + ((1 - p) * 60) + "px)" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, marginBottom: 22 }}>
         <IconBadge icon={icon} size={76} frameOverride={frame} />
-        <div style={{ ...baseText, fontSize: fitFontSize(title, { width: 650, fontSize: 45, minFontSize: 28 }), fontWeight: 900, color: C.gold }}>{title}</div>
+        <div style={{ ...baseText, fontSize: fitFontSize(title, { width: 650, fontSize: 45, minFontSize: 28 }), fontWeight: 900, color: C.gold }}>{asDisplayText(title)}</div>
       </div>
-      <div style={{ ...baseText, ...fit, color: C.muted, margin: "0 auto", fontWeight: 600 }}>{body}</div>
+      <div style={{ ...baseText, ...fit, color: C.muted, margin: "0 auto", fontWeight: 600 }}>{asDisplayText(body)}</div>
     </div>
   );
 };
@@ -280,7 +280,7 @@ export const MapPinDrop = ({ label = "موقعیت روی نقشه", frameOverri
   return (
     <div style={{ ...glass, padding: "32px 40px", display: "flex", alignItems: "center", justifyContent: "center", gap: 26, width: "100%" }}>
       <div style={{ color: C.gold, opacity: p, transform: "translateY(" + ((1 - p) * -46) + "px) scale(" + (0.9 + p * 0.1) + ")" }}><MapPin size={104} strokeWidth={1.7} fill="rgba(255,224,130,.10)" /></div>
-      <div style={{ ...baseText, textAlign: "right", fontSize: 32, fontWeight: 800 }}>{label}</div>
+      <div style={{ ...baseText, textAlign: "right", fontSize: 32, fontWeight: 800 }}>{asDisplayText(label)}</div>
     </div>
   );
 };
@@ -301,7 +301,7 @@ export const OrbitDiagram = ({ label = "مدار سیاره", frameOverride }) =
         <circle cx={380 + Math.cos(angle) * 270} cy={210 + Math.sin(angle) * 125} r="22" fill={C.cyan} />
         <circle cx={380 + Math.cos(angle * -0.7 + 2) * 205} cy={210 + Math.sin(angle * -0.7 + 2) * 90} r="14" fill={C.purple} />
       </svg>
-      <div style={{ ...baseText, color: C.muted, fontSize: 30, fontWeight: 800 }}>{label}</div>
+      <div style={{ ...baseText, color: C.muted, fontSize: 30, fontWeight: 800 }}>{asDisplayText(label)}</div>
     </div>
   );
 };
@@ -316,7 +316,7 @@ export const OrganPulse = ({ label = "ضربان قلب", detail = "نبض پی�
     <div style={{ ...glass, padding: "34px 42px", display: "flex", alignItems: "center", justifyContent: "center", gap: 28, width: "100%" }}>
       <div style={{ color: "#FF829A", transform: "scale(" + pulse + ")", opacity: p, filter: "drop-shadow(0 0 22px rgba(255,100,145,.48))" }}><HeartPulse size={122} strokeWidth={1.6} /></div>
       <div style={{ textAlign: "right" }}>
-        <div style={{ ...baseText, fontSize: 36, fontWeight: 900 }}>{label}</div>
+        <div style={{ ...baseText, fontSize: 36, fontWeight: 900 }}>{asDisplayText(label)}</div>
         <div style={{ ...baseText, color: C.muted, fontSize: 26, marginTop: 7 }}>{asDisplayText(detail)}</div>
       </div>
     </div>
@@ -339,7 +339,7 @@ export const LayoutRenderer = ({ layout = "headline", data = {}, fallbackText = 
     case "card":
       return <InfoCard title={data.title || text} body={data.body || ""} icon={data.icon || "sparkles"} frameOverride={frameOverride} />;
     case "list":
-      return <div style={{ ...glass, padding: "35px 40px", width: "100%" }}><div style={{ ...baseText, color: C.gold, fontSize: 38, fontWeight: 900, marginBottom: 24 }}>{data.title || text}</div><Chips items={data.items || [fallbackText]} frameOverride={frameOverride} /></div>;
+      return <div style={{ ...glass, padding: "35px 40px", width: "100%" }}><div style={{ ...baseText, color: C.gold, fontSize: 38, fontWeight: 900, marginBottom: 24 }}>{asDisplayText(data.title || text)}</div><Chips items={data.items || [fallbackText]} frameOverride={frameOverride} /></div>;
     case "headline":
     default:
       return <KineticHeadline text={text} accentWord={data.accentWord || accentWord} frameOverride={frameOverride} />;
