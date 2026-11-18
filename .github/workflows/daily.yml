@@ -110,6 +110,10 @@ jobs:
         timeout-minutes: 5
         run: npm install --no-package-lock --no-audit --no-fund
 
+      - name: Run outro timing regression tests
+        timeout-minutes: 1
+        run: npm test
+
       - name: Verify FFmpeg and FFprobe capabilities
         timeout-minutes: 2
         shell: bash
