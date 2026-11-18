@@ -5,7 +5,7 @@ Last verified: 2026-11-18
 ## Repository and current main
 
 - Repository: `hosseinasgari898989-dev/Tolid_mohtava` (public; keep public).
-- Main after both approved merges: `a5a6157a31dcee8529c868242537d1560d523bd1` (followed by a small workflow-safety commit removing the failure-only media Artifact upload).
+- Current `main` at last verification: `ee7dfa8d94c1cfca58c0387c4716ae1af8b7b4ac`, containing both approved PR merges, `docs/PROJECT_STATE.md`, and removal of the failure-only media Artifact upload. The new target selector exists only on the feature branch.
 - PR #1, “Upgrade Remotion video factory to V2”: merged at `19226216d6c8956a013d6e23c3245bda479776f0`.
 - PR #2, “Fix V3 closing CTA timing and seamless outro”: merged at `a5a6157a31dcee8529c868242537d1560d523bd1`.
 - The two requested backups remain present: `backup/pre-motion-graphics-v2-2026-11-17` and `backup/pre-v3-regression-2026-11-18`. Do not delete them.
@@ -49,9 +49,10 @@ Last verified: 2026-11-18
 - Feature branch: `feature/motion-kit-v1-2026-11-18`.
 - Pre-change backup: `backup/pre-motion-kit-v1-2026-11-18`.
 - PR #3 is open: [Build Motion Kit V1 and kit-demo composition](https://github.com/hosseinasgari898989-dev/Tolid_mohtava/pull/3); base is `main` at `ee7dfa8d94c1cfca58c0387c4716ae1af8b7b4ac`.
-- Implemented on this branch: brand tokens, RTL/Persian-digit/layout helpers, reusable animated components, animated background pack, slide/wipe/zoom transitions, `kit-demo` composition, layout/data integration and a manual-only demo workflow.
-- Contact sheet supports two-second sampling. The demo explicitly skips loop comparison because it is not a looping video; Daily Video Factory keeps its first/last-frame loop check.
-- The saved GitHub browser session is expired. Daily main verification and the `kit-demo` render/Release remain pending a fresh sign-in and actual workflow runs.
+- Implemented on this branch: brand tokens, RTL/Persian-digit/layout helpers, reusable animated components, animated background pack, slide/wipe/zoom transitions, `kit-demo` composition and layout/data integration. The existing `.github/workflows/daily.yml` is the sole manual entry point and now offers a `target` choice: `video` or `kit-demo` (default `video`).
+- `target=video` keeps the prior video pipeline and release path. `target=kit-demo` renders the composition, creates a contact sheet every two seconds and uploads only `kit-demo.mp4` plus `kit-demo-contact-sheet.png` to the Release tagged `kit-demo`. The standalone `kit-demo.yml` workflow has been removed to avoid a duplicate entry point.
+- The demo explicitly skips loop comparison because it is not a looping video; normal video rendering keeps its first/last-frame loop check.
+- No workflow was dispatched during this change. The owner will run the updated **Daily Video Factory** from a phone; `main` remains unchanged.
 - Keep this branch unmerged until owner approval.
 
 ## Licensing note
