@@ -24,16 +24,19 @@ jobs:
 
     steps:
       - name: Checkout repository
+        timeout-minutes: 3
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
 
       - name: Setup Node.js
+        timeout-minutes: 3
         uses: actions/setup-node@v4
         with:
           node-version: "22"
 
       - name: Setup Python
+        timeout-minutes: 3
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -126,11 +129,22 @@ jobs:
             done
 
             encoders="$(ffmpeg -hide_banner -encoders 2>&1)"
-            if ! grep -q "libmp3lame" <<< "$encoders"; then
-              echo "Bundled Remotion FFmpeg is missing the libmp3lame encoder." >&2
-              exit 1
-            fi
-            echo "Remotion FFmpeg fallback supports loudnorm, mix, audio output and frame scaling."
+            for required_encoder in libmp3lame png pcm_s16le; do
+              if ! grep -q "$required_encoder" <<< "$encoders"; then
+                echo "Bundled Remotion FFmpeg is missing required encoder: ${required_encoder}" >&2
+                exit 1
+              fi
+            done
+
+            muxers="$(ffmpeg -hide_banner -muxers 2>&1)"
+            for required_muxer in mp3 wav null image2; do
+              if ! grep -Eq "[[:space:]]${required_muxer}[[:space:]]" <<< "$muxers"; then
+                echo "Bundled Remotion FFmpeg is missing required muxer: ${required_muxer}" >&2
+                exit 1
+              fi
+            done
+
+            echo "Remotion FFmpeg fallback passed filter, encoder and muxer capability checks."
           fi
 
       - name: Install Python packages
