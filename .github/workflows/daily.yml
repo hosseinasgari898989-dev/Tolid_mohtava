@@ -272,6 +272,6 @@ jobs:
             gh release upload kit-demo out/kit-demo.mp4 out/kit-demo-contact-sheet.png --clobber
           else
             gh release create kit-demo out/kit-demo.mp4 out/kit-demo-contact-sheet.png \\
-              --title "ذهن‌خوان - Motion Kit V1 Demo" \\
+              --title "ذهن‌خوان - Motion Kit V1 Demo" \
               --notes "Original Motion Kit components rendered by GitHub Actions."
           fi
