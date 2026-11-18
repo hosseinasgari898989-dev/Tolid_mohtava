@@ -9,6 +9,7 @@ const FONT = DESIGN_TOKENS.fonts.persian;
 const baseText = { fontFamily: FONT, direction: "rtl", textAlign: "center", color: C.text };
 const popIn = (frame, fps, delay = 0) => spring({ frame: Math.max(0, frame - delay), fps, config: DESIGN_TOKENS.motion.spring });
 const glass = {
+  boxSizing: "border-box",
   background: "linear-gradient(145deg, rgba(24,39,76,.88), rgba(12,22,47,.82))",
   border: "1px solid " + C.border,
   borderRadius: DESIGN_TOKENS.radius.card,
@@ -168,18 +169,20 @@ export const ComparisonBars = ({ a = {}, b = {}, title = "", frameOverride }) =>
   const localFrame = useCurrentFrame();
   const frame = frameOverride ?? localFrame;
   const { fps } = useVideoConfig();
-  const p = popIn(frame, fps, 2);
   return (
     <div style={{ ...glass, padding: "30px 34px", display: "flex", flexDirection: "column", gap: 22 }}>
       {title ? <div style={{ ...baseText, fontSize: 33, fontWeight: 850 }}>{title}</div> : null}
       <div style={{ display: "flex", gap: 18, direction: "rtl" }}>
-        {[a, b].map((item, index) => (
+        {[a, b].map((item, index) => {
+          const p = popIn(frame, fps, index * 7);
+          return (
           <div key={index} style={{ flex: 1, minHeight: 170, padding: 20, borderRadius: 22, background: index === 0 ? "rgba(85,184,255,.1)" : "rgba(167,139,250,.12)", border: "1px solid " + C.border, opacity: p, transform: "translateY(" + ((1 - p) * 18) + "px)" }}>
             <div style={{ ...baseText, fontSize: 32, fontWeight: 900, color: index === 0 ? C.cyan : C.gold }}>{item.label || (index === 0 ? "گزینه A" : "گزینه B")}</div>
             {item.value !== undefined ? <div style={{ marginTop: 16, height: 15, borderRadius: 99, background: "rgba(255,255,255,.12)", overflow: "hidden", direction: "ltr" }}><div style={{ width: (Math.min(100, Math.max(0, Number(item.value))) * p) + "%", height: "100%", background: index === 0 ? C.blue : C.purple }} /></div> : null}
             {item.detail ? <div style={{ ...baseText, color: C.muted, fontSize: 25, marginTop: 14 }}>{item.detail}</div> : null}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
