@@ -85,7 +85,7 @@ export const BigNumber = ({ value = 2, unit = "", label = "", prefix = "", suffi
   return (
     <div style={{ ...glass, padding: "34px 42px", textAlign: "center", transform: "scale(" + (0.94 + progress * 0.06) + ")", opacity: progress }}>
       <div style={{ ...baseText, color: C.muted, fontSize: 29, fontWeight: 700 }}>{asDisplayText(label)}</div>
-      <div style={{ ...baseText, color: accent, fontSize: 150, fontWeight: 900, lineHeight: 1.1, textShadow: "0 0 30px " + accent + "55" }}>{prefix}{shown}<span style={{ fontSize: 52, marginRight: 12 }}>{asDisplayText(unit)}{asDisplayText(suffix)}</span></div>
+      <div style={{ ...baseText, color: accent, fontSize: 150, fontWeight: 900, lineHeight: 1.1, textShadow: "0 0 30px " + accent + "55" }}>{asDisplayText(prefix)}{shown}<span style={{ fontSize: 52, marginRight: 12 }}>{asDisplayText(unit)}{asDisplayText(suffix)}</span></div>
     </div>
   );
 };
@@ -217,7 +217,7 @@ export const Timeline = ({ events = [], title = "", frameOverride }) => {
   const safe = events.slice(0, 4);
   return (
     <div style={{ ...glass, padding: "32px 36px", width: "100%" }}>
-      {title ? <div style={{ ...baseText, fontSize: 34, fontWeight: 900, marginBottom: 28 }}>{title}</div> : null}
+      {title ? <div style={{ ...baseText, fontSize: 34, fontWeight: 900, marginBottom: 28 }}>{asDisplayText(title)}</div> : null}
       <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 22 }}>
         <div style={{ position: "absolute", top: 16, bottom: 14, right: 17, width: 4, background: "linear-gradient(" + C.cyan + ", " + C.purple + ")", opacity: 0.8 }} />
         {safe.map((event, index) => {
