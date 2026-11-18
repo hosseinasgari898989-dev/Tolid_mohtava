@@ -3,6 +3,14 @@ name: Daily Video Factory
 on:
   workflow_dispatch:
     inputs:
+      target:
+        description: "Choose the output to build"
+        required: true
+        type: choice
+        options:
+          - video
+          - kit-demo
+        default: video
       video_id:
         description: "Video to render (defaults to the first V2 test video)"
         required: false
@@ -152,12 +160,14 @@ jobs:
           fi
 
       - name: Install Python packages
+        if: inputs.target == 'video'
         timeout-minutes: 5
         run: |
           python -m pip install --disable-pip-version-check --upgrade pip
           python -m pip install --disable-pip-version-check -r requirements.txt
 
       - name: Build video
+        if: inputs.target == 'video'
         id: pipeline
         timeout-minutes: 15
         env:
@@ -165,7 +175,7 @@ jobs:
         run: node scripts/pipeline.mjs
 
       - name: Upload video, caption and contact sheet to GitHub Release
-        if: steps.pipeline.outputs.has_video == 'true'
+        if: inputs.target == 'video' && steps.pipeline.outputs.has_video == 'true'
         timeout-minutes: 3
         env:
           GH_TOKEN: ${{ github.token }}
@@ -187,7 +197,7 @@ jobs:
           fi
 
       - name: Upload voice comparison samples
-        if: steps.pipeline.outputs.has_voice_samples == 'true'
+        if: inputs.target == 'video' && steps.pipeline.outputs.has_voice_samples == 'true'
         timeout-minutes: 2
         env:
           GH_TOKEN: ${{ github.token }}
@@ -200,14 +210,14 @@ jobs:
           gh release upload "$TAG" "$FARID_PATH" "$DILARA_PATH" --clobber
 
       - name: Mark video as done
-        if: steps.pipeline.outputs.has_video == 'true'
+        if: inputs.target == 'video' && steps.pipeline.outputs.has_video == 'true'
         timeout-minutes: 2
         env:
           VIDEO_ID: ${{ steps.pipeline.outputs.video_id }}
         run: node scripts/mark-done.mjs
 
       - name: Commit completed video status
-        if: steps.pipeline.outputs.has_video == 'true'
+        if: inputs.target == 'video' && steps.pipeline.outputs.has_video == 'true'
         timeout-minutes: 2
         run: |
           set -euo pipefail
@@ -224,6 +234,44 @@ jobs:
           fi
 
       - name: No pending video
-        if: steps.pipeline.outputs.has_video != 'true'
+        if: inputs.target == 'video' && steps.pipeline.outputs.has_video != 'true'
         timeout-minutes: 1
         run: echo "Factory is idle. No pending videos."
+
+      - name: Install Motion Kit contact-sheet dependencies
+        if: inputs.target == 'kit-demo'
+        timeout-minutes: 3
+        run: python -m pip install --disable-pip-version-check numpy pillow
+
+      - name: Render kit-demo composition
+        if: inputs.target == 'kit-demo'
+        timeout-minutes: 12
+        run: |
+          set -Eeuo pipefail
+          mkdir -p out
+          npx remotion render src/index.jsx kit-demo out/kit-demo.mp4 --codec=h264 --crf=23 --pixel-format=yuv420p --concurrency=2
+          test -s out/kit-demo.mp4
+
+      - name: Create two-second kit-demo contact sheet
+        if: inputs.target == 'kit-demo'
+        timeout-minutes: 3
+        run: |
+          set -Eeuo pipefail
+          python scripts/contact_sheet.py --video out/kit-demo.mp4 --output out/kit-demo-contact-sheet.png --every-seconds 2 --skip-loop-check
+          test -s out/kit-demo-contact-sheet.png
+
+      - name: Upload kit-demo MP4 and contact sheet to GitHub Release
+        if: inputs.target == 'kit-demo'
+        timeout-minutes: 4
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if gh release view kit-demo >/dev/null 2>&1; then
+            gh release upload kit-demo out/kit-demo.mp4 out/kit-demo-contact-sheet.png --clobber
+          else
+            gh release create kit-demo out/kit-demo.mp4 out/kit-demo-contact-sheet.png \\
+              --title "ذهن‌خوان - Motion Kit V1 Demo" \\
+              --notes "Original Motion Kit components rendered by GitHub Actions."
+          fi
