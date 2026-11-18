@@ -6,6 +6,10 @@ import { fitFontSize, fitTextStyle, toPersianDigits } from "./layout-utils.js";
 
 const C = DESIGN_TOKENS.colors;
 const FONT = DESIGN_TOKENS.fonts.persian;
+const asDisplayText = (value) => {
+  const text = String(value ?? "");
+  return /[\\u0600-\\u06FF]/u.test(text) ? toPersianDigits(text) : text;
+};
 const baseText = { fontFamily: FONT, direction: "rtl", textAlign: "center", color: C.text };
 const popIn = (frame, fps, delay = 0) => spring({ frame: Math.max(0, frame - delay), fps, config: DESIGN_TOKENS.motion.spring });
 const glass = {
@@ -40,7 +44,7 @@ export const KineticHeadline = ({ text, accentWord = "", fontSize = 78, maxWidth
   const localFrame = useCurrentFrame();
   const frame = frameOverride ?? localFrame;
   const { fps } = useVideoConfig();
-  const words = String(text || "").trim().split(/\s+/u).filter(Boolean);
+  const words = asDisplayText(text).trim().split(/\s+/u).filter(Boolean);
   const fitted = fitFontSize(text, { width: maxWidth, fontSize, minFontSize: 38, maxLines: 3 });
   return (
     <div dir="rtl" style={{ ...baseText, maxWidth, width: "100%", margin: "0 auto", display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", columnGap: 18, rowGap: 5, fontSize: fitted, lineHeight: 1.3, fontWeight: 900, textShadow: "0 0 28px rgba(85,184,255,.32), 0 8px 24px rgba(0,0,0,.68)" }}>
@@ -62,7 +66,7 @@ export const StepHeader = ({ step = "01", label = "نکته", title = "", accent
     <div style={{ position: "relative", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 18, padding: "8px 4px 24px", opacity: progress, transform: "translateY(" + ((1 - progress) * 22) + "px)" }}>
       <div style={{ position: "absolute", top: -62, right: 10, fontFamily: FONT, fontSize: 232, fontWeight: 900, lineHeight: 1, color: "transparent", WebkitTextStroke: "2px rgba(114,165,255,.18)", zIndex: 0 }}>{toPersianDigits(step)}</div>
       <div style={{ position: "relative", zIndex: 1, flex: 1, textAlign: "right" }}>
-        <div style={{ ...baseText, textAlign: "right", color: C.cyan, fontSize: 28, fontWeight: 800, letterSpacing: 1 }}>{label}</div>
+        <div style={{ ...baseText, textAlign: "right", color: C.cyan, fontSize: 28, fontWeight: 800, letterSpacing: 1 }}>{asDisplayText(label)}</div>
         <KineticHeadline text={title} accentWord={accentWord} fontSize={62} maxWidth={760} frameOverride={frame} />
       </div>
       <IconBadge icon={icon} accent={C.gold} size={94} frameOverride={frame} />
@@ -79,7 +83,7 @@ export const BigNumber = ({ value = 2, unit = "", label = "", prefix = "", suffi
   const shown = Number.isFinite(numeric) ? toPersianDigits(Math.round(interpolate(progress, [0, 1], [0, numeric]))) : String(value);
   return (
     <div style={{ ...glass, padding: "34px 42px", textAlign: "center", transform: "scale(" + (0.94 + progress * 0.06) + ")", opacity: progress }}>
-      <div style={{ ...baseText, color: C.muted, fontSize: 29, fontWeight: 700 }}>{label}</div>
+      <div style={{ ...baseText, color: C.muted, fontSize: 29, fontWeight: 700 }}>{asDisplayText(label)}</div>
       <div style={{ ...baseText, color: accent, fontSize: 150, fontWeight: 900, lineHeight: 1.1, textShadow: "0 0 30px " + accent + "55" }}>{prefix}{shown}<span style={{ fontSize: 52, marginRight: 12 }}>{unit}{suffix}</span></div>
     </div>
   );
@@ -92,7 +96,7 @@ export const BarChart = ({ data = [], title = "", frameOverride }) => {
   const max = Math.max(1, ...data.map((item) => Number(item.value) || 0));
   return (
     <div style={{ ...glass, padding: "32px 38px", width: "100%" }}>
-      {title ? <div style={{ ...baseText, fontSize: 34, fontWeight: 800, marginBottom: 22 }}>{title}</div> : null}
+      {title ? <div style={{ ...baseText, fontSize: 34, fontWeight: 800, marginBottom: 22 }}>{asDisplayText(title)}</div> : null}
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {data.map((item, index) => {
           const progress = popIn(frame, fps, index * 6);
@@ -100,7 +104,7 @@ export const BarChart = ({ data = [], title = "", frameOverride }) => {
           return (
             <div key={String(index) + "-" + item.label}>
               <div style={{ ...baseText, display: "flex", justifyContent: "space-between", fontSize: 26, fontWeight: 700, marginBottom: 8 }}>
-                <span>{item.label}</span><span style={{ color: C.gold }}>{item.displayValue ?? toPersianDigits(item.value)}</span>
+                <span>{asDisplayText(item.label)}</span><span style={{ color: C.gold }}>{item.displayValue !== undefined ? asDisplayText(item.displayValue) : toPersianDigits(item.value)}</span>
               </div>
               <div style={{ height: 20, background: "rgba(255,255,255,.1)", borderRadius: 99, overflow: "hidden", direction: "ltr" }}>
                 <div style={{ height: "100%", width: width + "%", borderRadius: 99, background: item.color || "linear-gradient(90deg, " + C.blue + ", " + C.purple + ")", boxShadow: "0 0 24px rgba(85,184,255,.42)" }} />
@@ -130,7 +134,7 @@ export const LineChart = ({ data = [], title = "", frameOverride }) => {
   const dash = interpolate(progress, [0, 1], [820, 0]);
   return (
     <div style={{ ...glass, padding: "28px 34px", width: "100%" }}>
-      {title ? <div style={{ ...baseText, fontSize: 32, fontWeight: 800 }}>{title}</div> : null}
+      {title ? <div style={{ ...baseText, fontSize: 32, fontWeight: 800 }}>{asDisplayText(title)}</div> : null}
       <svg viewBox="0 0 780 330" width="100%" height="270" role="img" aria-label={title || "نمودار خطی"}>
         {[70, 140, 210, 280].map((y) => <line key={y} x1="35" y1={y} x2="745" y2={y} stroke="rgba(151,180,255,.15)" strokeWidth="2" />)}
         <polyline points={points} fill="none" stroke={C.cyan} strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="820" strokeDashoffset={dash} />
@@ -160,7 +164,7 @@ export const DonutChart = ({ value = 68, total = 100, label = "", frameOverride 
         <circle cx="140" cy="140" r={radius} fill="none" stroke={C.purple} strokeWidth="24" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} transform="rotate(-90 140 140)" />
         <text x="140" y="154" textAnchor="middle" fill={C.text} fontSize="46" fontFamily={FONT} fontWeight="800">{toPersianDigits(Math.round(ratio * 100))}٪</text>
       </svg>
-      {label ? <div style={{ ...baseText, color: C.muted, fontSize: 30, fontWeight: 800 }}>{label}</div> : null}
+      {label ? <div style={{ ...baseText, color: C.muted, fontSize: 30, fontWeight: 800 }}>{asDisplayText(label)}</div> : null}
     </div>
   );
 };
@@ -171,15 +175,15 @@ export const ComparisonBars = ({ a = {}, b = {}, title = "", frameOverride }) =>
   const { fps } = useVideoConfig();
   return (
     <div style={{ ...glass, padding: "30px 34px", display: "flex", flexDirection: "column", gap: 22 }}>
-      {title ? <div style={{ ...baseText, fontSize: 33, fontWeight: 850 }}>{title}</div> : null}
+      {title ? <div style={{ ...baseText, fontSize: 33, fontWeight: 850 }}>{asDisplayText(title)}</div> : null}
       <div style={{ display: "flex", gap: 18, direction: "rtl" }}>
         {[a, b].map((item, index) => {
           const p = popIn(frame, fps, index * 7);
           return (
           <div key={index} style={{ flex: 1, minHeight: 170, padding: 20, borderRadius: 22, background: index === 0 ? "rgba(85,184,255,.1)" : "rgba(167,139,250,.12)", border: "1px solid " + C.border, opacity: p, transform: "translateY(" + ((1 - p) * 18) + "px)" }}>
-            <div style={{ ...baseText, fontSize: 32, fontWeight: 900, color: index === 0 ? C.cyan : C.gold }}>{item.label || (index === 0 ? "گزینه A" : "گزینه B")}</div>
+            <div style={{ ...baseText, fontSize: 32, fontWeight: 900, color: index === 0 ? C.cyan : C.gold }}>{asDisplayText(item.label || (index === 0 ? "گزینه A" : "گزینه B"))}</div>
             {item.value !== undefined ? <div style={{ marginTop: 16, height: 15, borderRadius: 99, background: "rgba(255,255,255,.12)", overflow: "hidden", direction: "ltr" }}><div style={{ width: (Math.min(100, Math.max(0, Number(item.value))) * p) + "%", height: "100%", background: index === 0 ? C.blue : C.purple }} /></div> : null}
-            {item.detail ? <div style={{ ...baseText, color: C.muted, fontSize: 25, marginTop: 14 }}>{item.detail}</div> : null}
+            {item.detail ? <div style={{ ...baseText, color: C.muted, fontSize: 25, marginTop: 14 }}>{asDisplayText(item.detail)}</div> : null}
           </div>
           );
         })}
@@ -221,9 +225,9 @@ export const Timeline = ({ events = [], title = "", frameOverride }) => {
             <div key={index} style={{ display: "flex", alignItems: "flex-start", gap: 22, opacity: p, transform: "translateX(" + ((1 - p) * 26) + "px)" }}>
               <div style={{ width: 38, height: 38, borderRadius: 99, background: index === 0 ? C.gold : C.blue, boxShadow: "0 0 22px rgba(85,184,255,.34)", flexShrink: 0, zIndex: 1 }} />
               <div style={{ textAlign: "right", flex: 1 }}>
-                <div style={{ ...baseText, color: C.cyan, fontSize: 24, fontWeight: 800 }}>{event.when || ""}</div>
-                <div style={{ ...baseText, fontSize: 31, fontWeight: 900 }}>{event.title || ""}</div>
-                {event.description ? <div style={{ ...baseText, color: C.muted, fontSize: 24, marginTop: 4 }}>{event.description}</div> : null}
+                <div style={{ ...baseText, color: C.cyan, fontSize: 24, fontWeight: 800 }}>{asDisplayText(event.when || "")}</div>
+                <div style={{ ...baseText, fontSize: 31, fontWeight: 900 }}>{asDisplayText(event.title || "")}</div>
+                {event.description ? <div style={{ ...baseText, color: C.muted, fontSize: 24, marginTop: 4 }}>{asDisplayText(event.description)}</div> : null}
               </div>
             </div>
           );
@@ -241,7 +245,7 @@ export const Chips = ({ items = [], accent = C.cyan, frameOverride }) => {
     <div dir="rtl" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 15, width: "100%" }}>
       {items.map((item, index) => {
         const p = popIn(frame, fps, index * 5);
-        const text = typeof item === "string" ? item : item.label;
+        const text = asDisplayText(typeof item === "string" ? item : item.label);
         return <div key={index} style={{ ...baseText, padding: "15px 26px", borderRadius: 999, background: "rgba(85,184,255,.11)", border: "1px solid " + accent + "55", color: accent, fontSize: 26, fontWeight: 800, opacity: p, transform: "translateY(" + ((1 - p) * 16) + "px) scale(" + (0.94 + p * 0.06) + ")" }}>{text}</div>;
       })}
     </div>
@@ -255,12 +259,12 @@ export const SearchBar = ({ query = "راز شگفت‌انگیز بدن انس�
   const { fps } = useVideoConfig();
   const p = popIn(frame, fps, 2);
   const visible = Math.max(0, Math.min(query.length, Math.floor(frame / 2)));
-  const typed = query.slice(0, visible);
+  const typed = asDisplayText(query).slice(0, visible);
   return (
     <div style={{ ...glass, padding: 22, width: "100%", display: "flex", alignItems: "center", gap: 18, opacity: p, transform: "translateY(" + ((1 - p) * 20) + "px)" }}>
       <div style={{ flex: 1, borderRadius: 18, padding: "18px 22px", background: "rgba(255,255,255,.06)", border: "1px solid rgba(149,177,255,.18)", display: "flex", alignItems: "center", gap: 12 }}>
         <Search size={34} color={C.cyan} />
-        <span style={{ ...baseText, fontSize: 27, textAlign: "right", flex: 1, color: typed ? C.text : C.muted }}>{typed || placeholder}<span style={{ color: C.gold, opacity: frame % 20 < 10 ? 1 : 0 }}>▍</span></span>
+        <span style={{ ...baseText, fontSize: 27, textAlign: "right", flex: 1, color: typed ? C.text : C.muted }}>{typed || asDisplayText(placeholder)}<span style={{ color: C.gold, opacity: frame % 20 < 10 ? 1 : 0 }}>▍</span></span>
       </div>
       <IconBadge icon="search" size={68} frameOverride={frame} />
     </div>
@@ -312,7 +316,7 @@ export const OrganPulse = ({ label = "ضربان قلب", detail = "نبض پی�
       <div style={{ color: "#FF829A", transform: "scale(" + pulse + ")", opacity: p, filter: "drop-shadow(0 0 22px rgba(255,100,145,.48))" }}><HeartPulse size={122} strokeWidth={1.6} /></div>
       <div style={{ textAlign: "right" }}>
         <div style={{ ...baseText, fontSize: 36, fontWeight: 900 }}>{label}</div>
-        <div style={{ ...baseText, color: C.muted, fontSize: 26, marginTop: 7 }}>{detail}</div>
+        <div style={{ ...baseText, color: C.muted, fontSize: 26, marginTop: 7 }}>{asDisplayText(detail)}</div>
       </div>
     </div>
   );
