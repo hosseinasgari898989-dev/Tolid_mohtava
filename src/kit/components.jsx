@@ -8,7 +8,8 @@ const C = DESIGN_TOKENS.colors;
 const FONT = DESIGN_TOKENS.fonts.persian;
 const asDisplayText = (value) => {
   const text = String(value ?? "");
-  return /[\\u0600-\\u06FF]/u.test(text) ? toPersianDigits(text) : text;
+  const hasPersian = Array.from(text).some((character) => { const point = character.codePointAt(0); return point >= 0x0600 && point <= 0x06FF; });
+  return hasPersian ? toPersianDigits(text) : text;
 };
 const baseText = { fontFamily: FONT, direction: "rtl", textAlign: "center", color: C.text };
 const popIn = (frame, fps, delay = 0) => spring({ frame: Math.max(0, frame - delay), fps, config: DESIGN_TOKENS.motion.spring });
