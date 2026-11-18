@@ -21,6 +21,7 @@ import "@fontsource/vazirmatn/900.css";
 import { VisualBackground } from "./backgrounds/NeonBackgrounds";
 import {
   OUTRO_FRAMES,
+  COVER_FADE_START_FRAME,
   getOutroFrameState,
   getSceneRenderDuration,
   hasMinimumCtaHold
@@ -453,7 +454,7 @@ const OutroBridge = ({
   const frame = useCurrentFrame();
   const { coverOpacity, closingOpacity } = getOutroFrameState(frame);
   const lastSceneFrame = Math.max(0, lastSceneDurationFrames - OUTRO_FRAMES + frame);
-  const resetProgress = interpolate(frame, [coverStart, OUTRO_FRAMES - 1], [100, 0], clamp);
+  const resetProgress = interpolate(frame, [COVER_FADE_START_FRAME, OUTRO_FRAMES - 1], [100, 0], clamp);
 
   return (
     <AbsoluteFill>
