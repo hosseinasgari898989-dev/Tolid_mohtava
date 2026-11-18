@@ -1,50 +1,54 @@
 # Zehn-Khan Video Factory
 
-A free Persian short-video factory built with Remotion.
+A free Persian short-video factory built with Remotion and GitHub Actions.
 
-## Features
+## V2
 
-- Persian voiceover with Edge TTS (fa-IR-FaridNeural)
-- Word-level subtitle timings, with an even-split fallback
-- Four original animated backgrounds: neural, particles, waves and geometry
-- Three text templates: facts, list and question
-- RTL Persian text with the bundled Vazirmatn font
-- 1080x1920, 30 FPS, H.264 MP4
-- GitHub Releases for video and caption files
+- Narration-matched scenes: each scene's `narration` is aligned to real Edge TTS word boundaries.
+- A 1.5-second animated opening hook, large per-word kinetic scene text and highlighted keywords.
+- Four animated SVG backgrounds, changing scene-to-scene, with animated pictograms and zoom/slide/glitch transitions.
+- Large, outlined word subtitles in the Instagram-safe vertical area.
+- An opaque branded outro that fully covers previous scene layers.
+- Configurable Edge voice, rate and pitch per video.
+- Procedural ambient music and whoosh/pop sounds when local assets are absent.
+- Optional local MP3 music and SFX from `assets/music/` and `assets/sfx/`, chosen deterministically by video ID.
+- Voice ducking, audio fades and final loudness normalization.
+- Farid/Dilara voice comparison samples for the first video.
 
-## No stock footage or API keys
+## No API keys or paid services
 
-All backgrounds are generated locally in Remotion with React, SVG and CSS.
-There are no stock-video providers, stock downloads or API keys.
-
-Edge TTS still needs an internet connection to generate the Persian voice.
-It does not need a project API key.
+The renderer, backgrounds, icons, music pad and fallback sound effects are generated locally.
+Edge TTS needs an internet connection but no project API key. This build implements only
+`tts_provider: "edge"`; the provider boundary is ready for another provider later.
 
 ## Workflow
 
-The GitHub Actions workflow uses workflow_dispatch only.
-It processes one pending video per run.
+The GitHub Actions workflow is `workflow_dispatch` only. It renders one selected video.
+The manual input defaults to `brain-tired-001`. The workflow uploads the MP4 and caption
+to its existing GitHub Release; the first-video run also uploads
+`voice-test-farid.mp3` and `voice-test-dilara.mp3`.
 
-A successful run renders the MP4 and caption, uploads both to a GitHub
-Release, then marks that video as done in content_bank.json.
+The job has a 12-minute limit and the Remotion render itself has a 10-minute guard.
 
-## Add a video
+## Content schema
 
-Add an object to content_bank.json with a unique ID, status pending,
-a title, voiceover, template, scenes, caption and hashtags.
+Every scene needs `text_on_screen` and `narration`. The ordered scene narration segments
+must cover the voiceover exactly. Optional scene fields are `highlight`, `visual`,
+`icon` and `transition`.
 
-Allowed templates: facts, list, question.
+- On-screen text: maximum seven words per scene.
+- Visuals: `neural`, `particles`, `waves`, `geometry`.
+- Icons: `brain`, `low-battery`, `clock`, `lightbulb`, `checklist`,
+  `question`, `heart`, `eye`.
+- Transitions: `zoom`, `slide`, `glitch`.
+- TTS fields: `tts_provider`, `voice`, `rate`, `pitch`.
 
-Each scene needs text_on_screen. The optional visual field can be:
-neural, particles, waves or geometry. Omit it to rotate styles
-automatically using the video ID as the animation seed.
+Validation fails if scene narration is missing, out of sequence, or not a complete
+match for the voiceover; it also checks highlights, icon names, text length and
+background changes before synthesis or rendering.
 
-## Troubleshooting
+## Optional audio assets
 
-- TTS failed: check internet access and Edge TTS availability.
-- No word timings: the pipeline falls back to evenly spaced timings.
-- Video too long: shorten the voiceover; videos must be under 59 seconds.
-- Font error: check the Vazirmatn package installation.
-- Push failed: check GitHub Actions write permission and branch protection.
-
-Remotion licensing terms must be respected.
+Place Pixabay MP3 tracks in `assets/music/` and short whoosh/pop effects in
+`assets/sfx/`. Add each Pixabay track-page URL to `assets/LICENSES.md`.
+If either folder has no MP3 files, the factory generates the corresponding audio.

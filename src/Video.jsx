@@ -16,6 +16,7 @@ import {
 
 import "@fontsource/vazirmatn/400.css";
 import "@fontsource/vazirmatn/700.css";
+import "@fontsource/vazirmatn/900.css";
 
 import { VisualBackground } from "./backgrounds/NeonBackgrounds";
 
@@ -24,6 +25,12 @@ const clamp = {
   extrapolateRight: "clamp"
 };
 
+const normalizeWord = value => String(value)
+  .normalize("NFKC")
+  .replace(/[يى]/g, "ی")
+  .replace(/ك/g, "ک")
+  .replace(/[^\p{L}\p{N}]/gu, "");
+
 const baseFont = {
   fontFamily: "Vazirmatn, sans-serif",
   direction: "rtl",
@@ -31,207 +38,309 @@ const baseFont = {
   color: "white"
 };
 
-// Template 1: psychology facts.
-const FactsTemplate = ({ text }) => (
-  <div style={baseFont}>
-    <div style={{
-      fontSize: 34,
-      color: "#FFE082",
-      marginBottom: 24
-    }}>
-      دانستنی روان‌شناسی
-    </div>
-
-    <div style={{
-      fontSize: 64,
-      fontWeight: 700,
-      lineHeight: 1.5,
-      textShadow: "0 4px 18px #000"
-    }}>
-      {text}
-    </div>
-  </div>
-);
-
-// Template 2: show only the supplied numbered text.
-const ListTemplate = ({ text }) => (
-  <div style={baseFont}>
-    <div style={{
-      fontSize: 62,
-      fontWeight: 700,
-      lineHeight: 1.5,
-      textShadow: "0 4px 18px #000"
-    }}>
-      {text}
-    </div>
-  </div>
-);
-
-// Template 3: questions.
-const QuestionTemplate = ({ text }) => (
-  <div style={{
-    ...baseFont,
-    background: "rgba(12, 20, 45, 0.55)",
-    border: "2px solid rgba(255,255,255,0.35)",
-    borderRadius: 34,
-    padding: 42
-  }}>
-    <div style={{
-      fontSize: 36,
-      color: "#FFE082",
-      marginBottom: 24
-    }}>
-      یک سؤال برای ذهنت
-    </div>
-
-    <div style={{
-      fontSize: 64,
-      fontWeight: 700,
-      lineHeight: 1.5
-    }}>
-      {text}
-    </div>
-  </div>
-);
-
-const TemplateText = ({ template, text }) => {
-  if (template === "list") {
-    return <ListTemplate text={text} />;
-  }
-
-  if (template === "question") {
-    return <QuestionTemplate text={text} />;
-  }
-
-  return <FactsTemplate text={text} />;
-};
-
-// One original animated background and one text layer per scene.
-const SceneLayer = ({
-  scene,
-  index,
-  total,
-  videoId,
-  template,
-  duration
-}) => {
+const SceneIcon = ({ name }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-
-  const fadeIn = index === 0
-    ? 1
-    : interpolate(frame, [0, 12], [0, 1], clamp);
-
-  const fadeOut = index === total - 1
-    ? 1
-    : interpolate(
-        frame,
-        [Math.max(0, duration - 12), duration],
-        [1, 0],
-        clamp
-      );
-
-  const opacity = Math.min(fadeIn, fadeOut);
-
-  const movement = spring({
+  const entrance = spring({
     frame,
     fps,
-    config: {
-      damping: 17,
-      stiffness: 110
-    }
+    config: { damping: 13, stiffness: 120, mass: 0.75 }
   });
+  const floatY = Math.sin(frame / 17) * 7;
+
+  let artwork;
+  switch (name) {
+    case "brain":
+      artwork = (
+        <>
+          <path d="M50 22 C36 8 18 20 23 36 C9 43 16 62 29 64 C25 81 45 88 55 75 C66 89 86 78 80 62 C96 54 88 35 75 34 C78 19 60 12 50 22Z" />
+          <path d="M51 22 V76 M28 38 C42 35 43 48 34 54 M74 36 C60 36 59 49 69 55 M31 65 C43 62 45 71 42 77 M72 64 C60 61 58 70 63 78" />
+        </>
+      );
+      break;
+    case "low-battery":
+      artwork = (
+        <>
+          <rect x="15" y="29" width="65" height="42" rx="6" />
+          <path d="M80 42 H88 V58 H80 M23 37 H36 V63 H23Z" fill="#FFE082" stroke="none" />
+          <path d="M45 42 V58" />
+        </>
+      );
+      break;
+    case "clock":
+      artwork = (
+        <>
+          <circle cx="50" cy="50" r="34" />
+          <path d="M50 29 V51 L66 61 M50 12 V18 M88 50 H82" />
+        </>
+      );
+      break;
+    case "lightbulb":
+      artwork = (
+        <>
+          <path d="M34 59 C31 49 21 43 22 31 C23 14 37 7 50 7 C64 7 78 17 78 32 C78 44 68 51 66 60Z" />
+          <path d="M36 68 H64 M39 77 H61 M44 85 H56 M50 18 V29 M36 29 L42 36 M64 29 L58 36" />
+        </>
+      );
+      break;
+    case "checklist":
+      artwork = (
+        <>
+          <rect x="24" y="12" width="55" height="76" rx="7" />
+          <path d="M35 33 L41 39 L52 26 M57 34 H69 M35 56 L41 62 L52 49 M57 57 H69 M36 76 H68" />
+        </>
+      );
+      break;
+    case "question":
+      artwork = (
+        <>
+          <circle cx="50" cy="50" r="38" />
+          <path d="M36 37 C37 22 65 21 67 38 C69 50 52 51 51 63 M51 76 V77" />
+        </>
+      );
+      break;
+    case "heart":
+      artwork = (
+        <path d="M50 82 C42 74 17 56 17 36 C17 14 43 9 50 29 C59 8 83 15 83 36 C83 56 59 75 50 82Z" />
+      );
+      break;
+    case "eye":
+      artwork = (
+        <>
+          <path d="M8 50 C20 28 35 18 50 18 C65 18 80 28 92 50 C80 72 65 82 50 82 C35 82 20 72 8 50Z" />
+          <circle cx="50" cy="50" r="15" />
+          <circle cx="50" cy="50" r="5" fill="#FFE082" stroke="none" />
+        </>
+      );
+      break;
+    default:
+      return null;
+  }
 
   return (
-    <AbsoluteFill style={{ opacity }}>
-      <VisualBackground
-        visual={scene.visual}
-        videoId={videoId}
-        sceneIndex={index}
-      />
+    <div
+      style={{
+        width: 150,
+        height: 150,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transform: `translateY(${floatY}px) scale(${0.72 + entrance * 0.28})`,
+        opacity: interpolate(frame, [0, 5], [0.25, 1], clamp),
+        filter: "drop-shadow(0 0 18px rgba(72,230,242,.55))"
+      }}
+    >
+      <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none"
+        stroke="#FFE082" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">
+        {artwork}
+      </svg>
+    </div>
+  );
+};
+
+const KineticText = ({ scene, isHook }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const words = scene.textOnScreen.trim().split(/\s+/u);
+  const fontSize = isHook ? 112 : 90;
+  const highlight = normalizeWord(scene.highlight || "");
+
+  return (
+    <div
+      dir="rtl"
+      style={{
+        ...baseFont,
+        maxWidth: 940,
+        fontSize,
+        fontWeight: 900,
+        lineHeight: 1.55,
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        alignItems: "center",
+        columnGap: 17,
+        rowGap: 0,
+        textShadow: "0 5px 22px rgba(0,0,0,.82), 0 0 32px rgba(57,139,255,.55)",
+        WebkitTextStroke: "1px rgba(3,8,22,.35)"
+      }}
+    >
+      {words.map((word, index) => {
+        const wordFrame = Math.max(0, frame - index * 2);
+        const pop = spring({
+          frame: wordFrame,
+          fps,
+          config: { damping: 12, stiffness: 160, mass: 0.62 }
+        });
+        const active = highlight && normalizeWord(word) === highlight;
+
+        return (
+          <span
+            key={`${index}-${word}`}
+            style={{
+              display: "inline-block",
+              color: active ? "#FFE082" : "#FFFFFF",
+              opacity: interpolate(wordFrame, [0, 3], [0.08, 1], clamp),
+              transform: `translateY(${(1 - pop) * 32}px) scale(${0.68 + pop * 0.32})`,
+              textShadow: active
+                ? "0 0 10px #FFE082, 0 0 26px rgba(255,224,130,.9), 0 5px 18px rgba(0,0,0,.9)"
+                : "0 5px 18px rgba(0,0,0,.9)"
+            }}
+          >
+            {word}
+          </span>
+        );
+      })}
+    </div>
+  );
+};
+
+const SceneLayer = ({ scene, index, videoId }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const entrance = spring({
+    frame,
+    fps,
+    config: { damping: 17, stiffness: 95, mass: 0.9 }
+  });
+
+  const cameraX = Math.sin(frame * 0.018 + index) * 7;
+  const cameraY = Math.cos(frame * 0.014 + index * 0.7) * 9;
+  const cameraScale = 1.045 + Math.sin(frame * 0.012) * 0.009;
+
+  let transitionStyle = {};
+  if (scene.transition === "slide") {
+    transitionStyle = {
+      transform: `translateX(${(1 - entrance) * 135}px) scale(${0.98 + entrance * 0.02})`
+    };
+  } else if (scene.transition === "glitch") {
+    const jitter = frame < 7 ? Math.sin(frame * 5.2) * (7 - frame) * 2 : 0;
+    transitionStyle = {
+      transform: `translateX(${jitter}px) scale(${0.94 + entrance * 0.06})`,
+      filter: frame < 7 ? "saturate(1.5) contrast(1.12)" : "none"
+    };
+  } else {
+    transitionStyle = {
+      transform: `scale(${0.82 + entrance * 0.18})`
+    };
+  }
+
+  return (
+    <AbsoluteFill style={{ overflow: "hidden" }}>
+      <div
+        style={{
+          position: "absolute",
+          inset: -24,
+          transform: `translate(${cameraX}px, ${cameraY}px) scale(${cameraScale})`
+        }}
+      >
+        <VisualBackground
+          visual={scene.visual}
+          videoId={videoId}
+          sceneIndex={index}
+        />
+      </div>
 
       <AbsoluteFill
         style={{
+          background:
+            "radial-gradient(ellipse at 50% 42%, rgba(72,120,255,.12), transparent 48%), linear-gradient(180deg, rgba(4,8,22,.02), rgba(4,8,22,.13))",
           justifyContent: "center",
           alignItems: "center",
-          padding: 80
+          padding: "0 72px"
         }}
       >
         <div
-          dir="rtl"
           style={{
-            maxWidth: "100%",
-            opacity: 1,
-            transform:
-              `translateY(${(1 - movement) * 35}px) scale(${0.96 + movement * 0.04})`
+            position: "absolute",
+            top: "23%",
+            left: 0,
+            right: 0,
+            display: "flex",
+            justifyContent: "center"
           }}
         >
-          <TemplateText
-            template={template}
-            text={scene.textOnScreen}
-          />
+          <SceneIcon name={scene.icon} />
+        </div>
+
+        <div
+          style={{
+            position: "absolute",
+            top: "34%",
+            left: 58,
+            right: 58,
+            minHeight: 300,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            opacity: interpolate(frame, [0, 3], [0.12, 1], clamp),
+            ...transitionStyle
+          }}
+        >
+          <KineticText scene={scene} isHook={index === 0} />
         </div>
       </AbsoluteFill>
     </AbsoluteFill>
   );
 };
 
-// Word-by-word RTL subtitles.
 const WordSubtitles = ({ words, fps }) => {
   const frame = useCurrentFrame();
   const seconds = frame / fps;
+  if (!Array.isArray(words) || words.length === 0) return null;
 
-  if (!words || words.length === 0) {
+  let activeIndex = -1;
+  for (let index = 0; index < words.length; index++) {
+    if (seconds >= words[index].start) activeIndex = index;
+    else break;
+  }
+  if (activeIndex < 0 || seconds > words[words.length - 1].end + 0.04) {
     return null;
   }
 
-  let activeIndex = 0;
-
-  for (let index = 0; index < words.length; index++) {
-    if (seconds >= words[index].start) {
-      activeIndex = index;
-    } else {
-      break;
-    }
-  }
-
-  const first = Math.max(0, activeIndex - 3);
-  const visibleWords = words.slice(first, activeIndex + 4);
+  const first = Math.max(0, activeIndex - 1);
+  const visibleWords = words.slice(first, activeIndex + 1);
 
   return (
     <div
       dir="rtl"
       style={{
         position: "absolute",
-        bottom: 240,
-        left: 70,
-        right: 70,
+        top: "60%",
+        left: 58,
+        right: 58,
+        height: "10%",
+        overflow: "hidden",
         display: "flex",
         flexWrap: "wrap",
         justifyContent: "center",
+        alignContent: "center",
         alignItems: "center",
-        gap: 12,
-        padding: 18,
+        gap: "4px 15px",
+        padding: 0,
         ...baseFont,
-        fontSize: 42,
-        fontWeight: 700,
-        lineHeight: 1.8
+        fontSize: 56,
+        fontWeight: 900,
+        lineHeight: 1.45,
+        WebkitTextStroke: "2.5px #07101f",
+        paintOrder: "stroke fill",
+        textShadow: "0 4px 14px rgba(0,0,0,.98), 0 0 24px rgba(0,0,0,.8)"
       }}
     >
       {visibleWords.map((word, index) => {
         const realIndex = first + index;
         const active = realIndex === activeIndex;
+        const elapsed = Math.max(0, frame - Math.round(word.start * fps));
+        const pop = active
+          ? spring({ frame: elapsed, fps, config: { damping: 11, stiffness: 190 } })
+          : 1;
 
         return (
           <span
-            key={`${word.start}-${index}`}
+            key={`${word.start}-${realIndex}`}
             style={{
-              padding: "3px 12px",
-              borderRadius: 12,
-              background: active
-                ? "#FFE082"
-                : "rgba(0,0,0,0.68)",
-              color: active ? "#161616" : "#FFFFFF",
+              display: "inline-block",
+              color: active ? "#FFE082" : "#FFFFFF",
+              transform: active ? `scale(${0.94 + pop * 0.12})` : "scale(1)",
               unicodeBidi: "isolate"
             }}
           >
@@ -243,51 +352,44 @@ const WordSubtitles = ({ words, fps }) => {
   );
 };
 
-// Branded outro only. No intro: the first scene is the hook.
 const BrandOutro = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-
   const scale = spring({
     frame,
     fps,
-    config: {
-      damping: 14,
-      stiffness: 100
-    }
+    config: { damping: 14, stiffness: 100 }
   });
-
-  const opacity = interpolate(
-    frame,
-    [0, 8, 35, 48],
-    [0, 1, 1, 0],
-    clamp
-  );
+  const contentOpacity = interpolate(frame, [0, 8, 37, 48], [0, 1, 1, 1], clamp);
 
   return (
     <AbsoluteFill
       style={{
-        background: "rgba(7, 12, 32, 0.82)",
+        background: "#080D20",
         alignItems: "center",
         justifyContent: "center",
-        opacity,
-        ...baseFont
+        ...baseFont,
+        zIndex: 20
       }}
     >
       <div
         style={{
-          fontSize: 94,
-          fontWeight: 700,
-          transform: `scale(${0.8 + scale * 0.2})`,
-          color: "#FFE082"
+          opacity: contentOpacity,
+          fontSize: 100,
+          fontWeight: 900,
+          transform: `scale(${0.78 + scale * 0.22})`,
+          color: "#FFE082",
+          textShadow: "0 0 28px rgba(255,224,130,.55)"
         }}
       >
         ذهن‌خوان
       </div>
-
       <div style={{
-        fontSize: 34,
-        marginTop: 24
+        opacity: contentOpacity,
+        fontSize: 42,
+        fontWeight: 700,
+        marginTop: 24,
+        textShadow: "0 4px 18px black"
       }}>
         فالو کن برای فردا
       </div>
@@ -303,63 +405,34 @@ export const Video = ({
   words,
   audioDuration
 }) => {
-  // Wait for local Vazirmatn regular and bold font files.
   const [fontHandle] = useState(
-    () => delayRender("Loading Vazirmatn regular and bold fonts")
+    () => delayRender("Loading Vazirmatn regular, bold and black fonts")
   );
 
   useEffect(() => {
     let cancelled = false;
-
     const loadFonts = async () => {
       try {
-        const regular = await document.fonts.load(
-          '400 64px "Vazirmatn"'
-        );
-        const bold = await document.fonts.load(
-          '700 64px "Vazirmatn"'
-        );
-
+        const regular = await document.fonts.load('400 64px "Vazirmatn"');
+        const bold = await document.fonts.load('700 64px "Vazirmatn"');
+        const black = await document.fonts.load('900 112px "Vazirmatn"');
         await document.fonts.ready;
-
-        if (!regular.length || !bold.length) {
+        if (!regular.length || !bold.length || !black.length) {
           throw new Error("Vazirmatn font files did not load.");
         }
-
-        if (!cancelled) {
-          continueRender(fontHandle);
-        }
+        if (!cancelled) continueRender(fontHandle);
       } catch (error) {
-        if (!cancelled) {
-          cancelRender(error);
-        }
+        if (!cancelled) cancelRender(error);
       }
     };
-
     loadFonts();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [fontHandle]);
 
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
-
-  const count = scenes.length;
-  const overlap = 12;
-
-  const sceneSpan = Math.ceil(
-    (durationInFrames + overlap * Math.max(0, count - 1)) /
-    Math.max(1, count)
-  );
-
-  const progress = interpolate(
-    frame,
-    [0, durationInFrames - 1],
-    [0, 100],
-    clamp
-  );
+  const progress = interpolate(frame, [0, durationInFrames - 1], [0, 100], clamp);
+  const outroFrom = Math.max(0, durationInFrames - 48);
 
   return (
     <AbsoluteFill style={{
@@ -367,32 +440,15 @@ export const Video = ({
       overflow: "hidden",
       fontFamily: "Vazirmatn, sans-serif"
     }}>
-
-      {/* Background scenes overlap for a 12-frame crossfade. */}
       {scenes.map((scene, index) => {
-        const start = index * (sceneSpan - overlap);
-
-        const duration = Math.min(
-          sceneSpan,
-          durationInFrames - start
-        );
-
-        if (duration <= 0) return null;
-
+        const duration = Math.max(1, scene.endFrame - scene.startFrame);
         return (
           <Sequence
-            key={`${index}-${scene.visual || "auto"}`}
-            from={start}
+            key={`${index}-${scene.startFrame}`}
+            from={scene.startFrame}
             durationInFrames={duration}
           >
-            <SceneLayer
-              scene={scene}
-              index={index}
-              total={count}
-              videoId={videoId}
-              template={template}
-              duration={duration}
-            />
+            <SceneLayer scene={scene} index={index} videoId={videoId} />
           </Sequence>
         );
       })}
@@ -403,12 +459,13 @@ export const Video = ({
         dir="rtl"
         style={{
           position: "absolute",
-          top: 70,
-          right: 65,
+          top: "13%",
+          right: 66,
           color: "white",
-          fontSize: 34,
-          fontWeight: 700,
-          textShadow: "0 2px 12px black"
+          fontSize: 38,
+          fontWeight: 900,
+          textShadow: "0 2px 14px black",
+          zIndex: 5
         }}
       >
         ذهن‌خوان
@@ -419,25 +476,25 @@ export const Video = ({
       <div
         style={{
           position: "absolute",
-          top: 0,
+          top: "12%",
           left: 0,
           right: 0,
-          height: 10,
-          background: "rgba(255,255,255,.2)"
+          height: 7,
+          background: "rgba(255,255,255,.14)",
+          zIndex: 6
         }}
       >
-        <div
-          style={{
-            width: `${progress}%`,
-            height: "100%",
-            background: "#FFE082"
-          }}
-        />
+        <div style={{
+          width: `${progress}%`,
+          height: "100%",
+          background: "#FFE082",
+          boxShadow: "0 0 18px #FFE082"
+        }} />
       </div>
 
       <Sequence
-        from={Math.max(0, durationInFrames - 48)}
-        durationInFrames={48}
+        from={outroFrom}
+        durationInFrames={Math.max(1, durationInFrames - outroFrom)}
       >
         <BrandOutro />
       </Sequence>

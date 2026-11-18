@@ -41,7 +41,7 @@ function GlowDefs({ id }) {
   return (
     <defs>
       <filter id={id} x="-100%" y="-100%" width="300%" height="300%">
-        <feGaussianBlur stdDeviation="8" result="blur" />
+        <feGaussianBlur stdDeviation="13" result="blur" />
         <feMerge>
           <feMergeNode in="blur" />
           <feMergeNode in="SourceGraphic" />
@@ -49,7 +49,7 @@ function GlowDefs({ id }) {
       </filter>
 
       <radialGradient id={`${id}-background`}>
-        <stop offset="0%" stopColor="#182A57" stopOpacity="0.82" />
+        <stop offset="0%" stopColor="#284A91" stopOpacity="0.98" />
         <stop offset="100%" stopColor={NAVY} stopOpacity="0" />
       </radialGradient>
 
@@ -404,7 +404,7 @@ export const VisualBackground = ({
       <AbsoluteFill
         style={{
           background:
-            "linear-gradient(180deg, rgba(8,13,32,0.22), rgba(8,13,32,0.46))"
+            "radial-gradient(ellipse at 50% 43%, rgba(57,139,255,0.20), transparent 52%), radial-gradient(ellipse at 18% 22%, rgba(72,230,242,0.16), transparent 36%), radial-gradient(ellipse at 86% 72%, rgba(155,107,255,0.16), transparent 40%), linear-gradient(180deg, rgba(4,8,22,0.02), rgba(4,8,22,0.14))"
         }}
       />
     </AbsoluteFill>
