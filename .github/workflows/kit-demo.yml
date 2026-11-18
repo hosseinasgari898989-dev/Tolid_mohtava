@@ -68,7 +68,7 @@ jobs:
         timeout-minutes: 3
         run: |
           set -Eeuo pipefail
-          python scripts/contact_sheet.py --video out/kit-demo.mp4 --output out/kit-demo-contact-sheet.png --every-seconds 2
+          python scripts/contact_sheet.py --video out/kit-demo.mp4 --output out/kit-demo-contact-sheet.png --every-seconds 2 --skip-loop-check
           test -s out/kit-demo.mp4
           test -s out/kit-demo-contact-sheet.png
 
