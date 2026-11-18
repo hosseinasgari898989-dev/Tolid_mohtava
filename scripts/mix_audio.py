@@ -2,6 +2,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import re
 import subprocess
 import wave
@@ -203,15 +204,26 @@ def main():
         music_label = "1:a"
         print("No assets/music MP3 found; using the procedural ambient pad.")
 
-    filters = [
-        f"[0:a]apad=pad_dur=1.5,atrim=duration={duration:.3f},asetpts=PTS-STARTPTS,"
-        "asplit=2[voice_sc][voice_mix]",
-        f"[{music_label}]atrim=duration={duration:.3f},asetpts=PTS-STARTPTS,"
-        f"afade=t=in:st=0:d=1,afade=t=out:st={duration - 2.0:.3f}:d=2,"
-        "volume=0.12[music]",
-        "[music][voice_sc]sidechaincompress=threshold=0.02:ratio=5:attack=20:release=420[ducked]",
-        "[voice_mix][ducked]amix=inputs=2:duration=first:dropout_transition=0[mix0]",
-    ]
+    bundled_fallback = os.environ.get("REMOTION_FFMPEG_FALLBACK") == "1"
+    if bundled_fallback:
+        # Remotion's lean FFmpeg build intentionally omits afade and sidechaincompress.
+        # Keep the music bed quiet and use only filters confirmed by the CI preflight.
+        filters = [
+            f"[0:a]apad=pad_dur=1.5,atrim=duration={duration:.3f},asetpts=PTS-STARTPTS[voice_mix]",
+            f"[{music_label}]atrim=duration={duration:.3f},asetpts=PTS-STARTPTS,"
+            "volume=0.08[music]",
+            "[voice_mix][music]amix=inputs=2:duration=first:dropout_transition=0[mix0]",
+        ]
+    else:
+        filters = [
+            f"[0:a]apad=pad_dur=1.5,atrim=duration={duration:.3f},asetpts=PTS-STARTPTS,"
+            "asplit=2[voice_sc][voice_mix]",
+            f"[{music_label}]atrim=duration={duration:.3f},asetpts=PTS-STARTPTS,"
+            f"afade=t=in:st=0:d=1,afade=t=out:st={duration - 2.0:.3f}:d=2,"
+            "volume=0.12[music]",
+            "[music][voice_sc]sidechaincompress=threshold=0.02:ratio=5:attack=20:release=420[ducked]",
+            "[voice_mix][ducked]amix=inputs=2:duration=first:dropout_transition=0[mix0]",
+        ]
 
     sfx_labels = []
     if sfx_files:

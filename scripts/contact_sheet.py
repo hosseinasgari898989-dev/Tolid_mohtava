@@ -36,26 +36,31 @@ def probe_video(path):
     return fps, frame_count, duration
 
 
-def extract_frames(video, frame_indices, output_dir):
+def extract_frames(video, frame_indices, fps, output_dir):
     output_dir.mkdir(parents=True, exist_ok=True)
-    select = "+".join("eq(n," + str(index) + ")" for index in frame_indices)
-    pattern = output_dir / "sample_%02d.png"
-    subprocess.run(
-        [
-            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-            "-i", str(video),
-            "-vf",
-            "select='" + select + "',scale=360:640:force_original_aspect_ratio=decrease,"
-            "pad=360:640:(ow-iw)/2:(oh-ih)/2:color=black",
-            "-fps_mode", "vfr",
-            "-frames:v", str(len(frame_indices)),
-            str(pattern)
-        ],
-        check=True
-    )
-    paths = [output_dir / ("sample_" + str(index + 1).zfill(2) + ".png")
-             for index in range(len(frame_indices))]
-    missing = [str(path) for path in paths if not path.exists()]
+    paths = []
+
+    # Seek and scale each still independently. This avoids select/pad filters that
+    # are not present in Remotion's intentionally small bundled FFmpeg build.
+    for sample_index, frame_index in enumerate(frame_indices):
+        output_path = output_dir / ("sample_" + str(sample_index + 1).zfill(2) + ".png")
+        timestamp = frame_index / fps
+        subprocess.run(
+            [
+                "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+                "-ss", "{:.6f}".format(timestamp),
+                "-i", str(video),
+                "-map", "0:v:0",
+                "-vf", "scale=360:640",
+                "-frames:v", "1",
+                "-update", "1",
+                str(output_path)
+            ],
+            check=True
+        )
+        paths.append(output_path)
+
+    missing = [str(path) for path in paths if not path.exists() or path.stat().st_size == 0]
     if missing:
         raise RuntimeError("FFmpeg did not extract every requested still frame: " + ", ".join(missing))
     return paths
@@ -108,7 +113,7 @@ def main():
         raise RuntimeError("A requested sample timestamp overlaps the final frame.")
 
     frame_dir = output.parent / "contact-sheet-frames"
-    paths = extract_frames(video, frame_indices, frame_dir)
+    paths = extract_frames(video, frame_indices, fps, frame_dir)
     first = np.asarray(Image.open(paths[0]).convert("RGB"), dtype=np.int16)
     last = np.asarray(Image.open(paths[-1]).convert("RGB"), dtype=np.int16)
     mean_absolute_error = float(np.abs(first - last).mean())

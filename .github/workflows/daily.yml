@@ -20,7 +20,7 @@ jobs:
   build:
     name: Build one Persian short video
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 25
 
     steps:
       - name: Checkout repository
@@ -38,27 +38,117 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install FFmpeg
+      - name: Locate or install FFmpeg and FFprobe
+        timeout-minutes: 5
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          set -Eeuo pipefail
+
+          if command -v ffmpeg >/dev/null 2>&1 && command -v ffprobe >/dev/null 2>&1; then
+            echo "System FFmpeg and FFprobe are already available."
+          else
+            echo "Trying a bounded apt install without an unnecessary apt-get update..."
+            if ! timeout --signal=TERM --kill-after=5s 75s sudo apt-get \
+              -o Acquire::Retries=3 \
+              -o Acquire::http::Timeout=30 \
+              -o Acquire::https::Timeout=30 \
+              install -y ffmpeg; then
+              echo "Direct apt install failed; refreshing package metadata once."
+              if timeout --signal=TERM --kill-after=5s 75s sudo apt-get \
+                -o Acquire::Retries=3 \
+                -o Acquire::http::Timeout=30 \
+                -o Acquire::https::Timeout=30 \
+                update; then
+                timeout --signal=TERM --kill-after=5s 75s sudo apt-get \
+                  -o Acquire::Retries=3 \
+                  -o Acquire::http::Timeout=30 \
+                  -o Acquire::https::Timeout=30 \
+                  install -y ffmpeg || true
+              else
+                echo "apt-get update did not finish within its time budget."
+              fi
+            fi
+          fi
+
+          fallback_dir="$RUNNER_TEMP/remotion-media-bin"
+          mkdir -p "$fallback_dir"
+
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            echo "System ffmpeg is unavailable; adding the Remotion FFmpeg fallback."
+            cat > "$fallback_dir/ffmpeg" <<'WRAPPER'
+          #!/usr/bin/env bash
+          set -Eeuo pipefail
+          cd "${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is not set}"
+          exec npx --no-install remotion ffmpeg "$@"
+          WRAPPER
+            chmod +x "$fallback_dir/ffmpeg"
+            echo "REMOTION_FFMPEG_FALLBACK=1" >> "$GITHUB_ENV"
+          fi
+
+          if ! command -v ffprobe >/dev/null 2>&1; then
+            echo "System ffprobe is unavailable; adding the Remotion FFprobe fallback."
+            cat > "$fallback_dir/ffprobe" <<'WRAPPER'
+          #!/usr/bin/env bash
+          set -Eeuo pipefail
+          cd "${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is not set}"
+          exec npx --no-install remotion ffprobe "$@"
+          WRAPPER
+            chmod +x "$fallback_dir/ffprobe"
+          fi
+
+          if [[ -x "$fallback_dir/ffmpeg" || -x "$fallback_dir/ffprobe" ]]; then
+            echo "$fallback_dir" >> "$GITHUB_PATH"
+            echo "Remotion bundled media binary fallback registered for following steps."
+          else
+            echo "System media binaries are available."
+          fi
 
       - name: Install Node packages
+        timeout-minutes: 5
         run: npm install --no-package-lock --no-audit --no-fund
 
-      - name: Install Python packages
+      - name: Verify FFmpeg and FFprobe capabilities
+        timeout-minutes: 2
+        shell: bash
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          set -Eeuo pipefail
+          ffmpeg -hide_banner -version
+          ffprobe -hide_banner -version
+
+          if [[ "${REMOTION_FFMPEG_FALLBACK:-0}" == "1" ]]; then
+            echo "Checking the required subset of Remotion's bundled FFmpeg features..."
+            filters="$(ffmpeg -hide_banner -filters 2>&1)"
+            for required_filter in loudnorm amix atrim apad adelay volume asetpts scale; do
+              if ! grep -Eq "[[:space:]]${required_filter}[[:space:]]" <<< "$filters"; then
+                echo "Bundled Remotion FFmpeg is missing required filter: ${required_filter}" >&2
+                exit 1
+              fi
+            done
+
+            encoders="$(ffmpeg -hide_banner -encoders 2>&1)"
+            if ! grep -q "libmp3lame" <<< "$encoders"; then
+              echo "Bundled Remotion FFmpeg is missing the libmp3lame encoder." >&2
+              exit 1
+            fi
+            echo "Remotion FFmpeg fallback supports loudnorm, mix, audio output and frame scaling."
+          fi
+
+      - name: Install Python packages
+        timeout-minutes: 5
+        run: |
+          python -m pip install --disable-pip-version-check --upgrade pip
+          python -m pip install --disable-pip-version-check -r requirements.txt
 
       - name: Build video
         id: pipeline
+        timeout-minutes: 15
         env:
           VIDEO_ID: ${{ inputs.video_id || 'brain-tired-001' }}
         run: node scripts/pipeline.mjs
 
       - name: Upload video, caption and contact sheet to GitHub Release
         if: steps.pipeline.outputs.has_video == 'true'
+        timeout-minutes: 3
         env:
           GH_TOKEN: ${{ github.token }}
           VIDEO_ID: ${{ steps.pipeline.outputs.video_id }}
@@ -80,6 +170,7 @@ jobs:
 
       - name: Upload voice comparison samples
         if: steps.pipeline.outputs.has_voice_samples == 'true'
+        timeout-minutes: 2
         env:
           GH_TOKEN: ${{ github.token }}
           VIDEO_ID: ${{ steps.pipeline.outputs.video_id }}
@@ -92,12 +183,14 @@ jobs:
 
       - name: Mark video as done
         if: steps.pipeline.outputs.has_video == 'true'
+        timeout-minutes: 2
         env:
           VIDEO_ID: ${{ steps.pipeline.outputs.video_id }}
         run: node scripts/mark-done.mjs
 
       - name: Commit completed video status
         if: steps.pipeline.outputs.has_video == 'true'
+        timeout-minutes: 2
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -114,4 +207,5 @@ jobs:
 
       - name: No pending video
         if: steps.pipeline.outputs.has_video != 'true'
+        timeout-minutes: 1
         run: echo "Factory is idle. No pending videos."
