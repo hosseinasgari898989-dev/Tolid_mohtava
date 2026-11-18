@@ -19,6 +19,12 @@ import "@fontsource/vazirmatn/700.css";
 import "@fontsource/vazirmatn/900.css";
 
 import { VisualBackground } from "./backgrounds/NeonBackgrounds";
+import {
+  OUTRO_FRAMES,
+  getOutroFrameState,
+  getSceneRenderDuration,
+  hasMinimumCtaHold
+} from "./outroTiming.js";
 
 const clamp = {
   extrapolateLeft: "clamp",
@@ -392,7 +398,9 @@ const SceneSubtitles = ({ scenes, fps, hideAfterFrame, frameOverride }) => {
   );
 };
 
-const OUTRO_FRAMES = 45;
+if (!hasMinimumCtaHold()) {
+  throw new Error("Closing CTA must remain fully visible for at least 1.2 seconds.");
+}
 
 const BrandMark = () => (
   <div
@@ -443,9 +451,7 @@ const OutroBridge = ({
   lastSceneDurationFrames
 }) => {
   const frame = useCurrentFrame();
-  const coverStart = OUTRO_FRAMES - 22;
-  const coverOpacity = interpolate(frame, [coverStart, OUTRO_FRAMES - 1], [0, 1], clamp);
-  const closingOpacity = interpolate(frame, [0, 3, 21, 28], [0, 1, 1, 0], clamp);
+  const { coverOpacity, closingOpacity } = getOutroFrameState(frame);
   const lastSceneFrame = Math.max(0, lastSceneDurationFrames - OUTRO_FRAMES + frame);
   const resetProgress = interpolate(frame, [coverStart, OUTRO_FRAMES - 1], [100, 0], clamp);
 
@@ -476,7 +482,7 @@ const OutroBridge = ({
           WebkitTextStroke: "2px #07101f",
           paintOrder: "stroke fill",
           textShadow: "0 0 14px rgba(255,224,130,.75), 0 5px 20px rgba(0,0,0,.98)",
-          zIndex: 12
+          zIndex: 35
         }}
       >
         فالو کن برای فردا
@@ -540,7 +546,7 @@ export const Video = ({
       fontFamily: "Vazirmatn, sans-serif"
     }}>
       {scenes.map((scene, index) => {
-        const duration = Math.max(1, scene.endFrame - scene.startFrame);
+        const duration = getSceneRenderDuration(scene, index, scenes.length - 1, outroFrom);
         return (
           <Sequence
             key={`${index}-${scene.startFrame}`}
@@ -569,7 +575,12 @@ export const Video = ({
           firstScene={scenes[0]}
           videoId={videoId}
           lastSceneDurationFrames={
-            scenes[scenes.length - 1].endFrame - scenes[scenes.length - 1].startFrame
+            getSceneRenderDuration(
+              scenes[scenes.length - 1],
+              scenes.length - 1,
+              scenes.length - 1,
+              outroFrom
+            )
           }
         />
       </Sequence>
