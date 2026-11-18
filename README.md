@@ -25,6 +25,10 @@ The renderer, backgrounds, icons, music pad and fallback sound effects are gener
 Edge TTS needs an internet connection but no project API key. This build implements only
 `tts_provider: "edge"`; the provider boundary is ready for another provider later.
 
+## Remotion license
+
+Remotion's official Free License covers individuals and teams of up to 3 people, including automated rendering and commercial video creation. Larger for-profit organizations may need a paid Company License. Re-check eligibility if the operating entity or team size changes.
+
 ## Workflow
 
 The GitHub Actions workflow is `workflow_dispatch` only. It renders one selected video.
