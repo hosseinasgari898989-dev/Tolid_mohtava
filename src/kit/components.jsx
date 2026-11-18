@@ -46,7 +46,7 @@ export const KineticHeadline = ({ text, accentWord = "", fontSize = 78, maxWidth
       {words.map((word, index) => {
         const progress = popIn(frame, fps, index * DESIGN_TOKENS.motion.stagger);
         const highlighted = accentWord && word.replace(/[،.!؟:؛]/gu, "") === accentWord.replace(/[،.!؟:؛]/gu, "");
-        return <span key={String(index) + "-" + word} style={{ display: "inline-block", opacity: progress, transform: "translateY(" + ((1 - progress) * 18) + "px) scale(" + (0.92 + progress * 0.08) + ")", color: highlighted ? C.gold : C.text, textShadow: highlighted ? "0 0 12px rgba(255,224,130,.9), 0 0 34px rgba(255,224,130,.42)" : "0 4px 20px rgba(0,0,0,.7)" }}>{word}</span>;
+        return <span key={String(index) + "-" + word} style={{ display: "inline-block", opacity: 1, transform: "translateY(" + ((1 - progress) * 18) + "px) scale(" + (0.92 + progress * 0.08) + ")", color: highlighted ? C.gold : C.text, textShadow: highlighted ? "0 0 12px rgba(255,224,130,.9), 0 0 34px rgba(255,224,130,.42)" : "0 4px 20px rgba(0,0,0,.7)" }}>{word}</span>;
       })}
     </div>
   );
