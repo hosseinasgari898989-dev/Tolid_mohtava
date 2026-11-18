@@ -19,6 +19,7 @@ import "@fontsource/vazirmatn/700.css";
 import "@fontsource/vazirmatn/900.css";
 
 import { VisualBackground } from "./backgrounds/NeonBackgrounds";
+import { LayoutRenderer } from "./kit/components.jsx";
 import {
   OUTRO_FRAMES,
   COVER_FADE_START_FRAME,
@@ -292,7 +293,7 @@ const SceneLayer = ({ scene, index, videoId, frameOverride }) => {
             ...transitionStyle
           }}
         >
-          <KineticText scene={scene} isHook={index === 0} frameOverride={frameOverride} />
+          {scene.layout ? <LayoutRenderer layout={scene.layout} data={scene.data || {}} fallbackText={scene.textOnScreen} accentWord={scene.highlight} frameOverride={frameOverride} /> : <KineticText scene={scene} isHook={index === 0} frameOverride={frameOverride} />}
         </div>
       </AbsoluteFill>
     </AbsoluteFill>

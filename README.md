@@ -15,6 +15,10 @@ A free Persian short-video factory built with Remotion and GitHub Actions.
 - Voice ducking, audio fades and final loudness normalization.
 - Farid/Dilara voice comparison samples for the first video.
 
+## Motion Kit V1
+
+The reusable Remotion component library is in `src/kit/` and brand tokens are in `design/tokens.js`. Every content scene can declare a `layout` and its `data` object: `headline`, `bignumber`, `chart`, `timeline`, `comparison`, `card`, or `list`. The `kit-demo` composition demonstrates all components and transitions; the MP4 and two-second contact sheet are published only to the `kit-demo` GitHub Release.
+
 ## No API keys or paid services
 
 The renderer, backgrounds, icons, music pad and fallback sound effects are generated locally.

@@ -16,7 +16,12 @@
         "highlight": "تنبل",
         "visual": "neural",
         "icon": "brain",
-        "transition": "zoom"
+        "transition": "zoom",
+        "layout": "headline",
+        "data": {
+          "text": "ذهنت خسته‌ست، نه تنبل!",
+          "accentWord": "تنبل"
+        }
       },
       {
         "text_on_screen": "کارهای ساده، سنگین می‌شن",
@@ -24,7 +29,13 @@
         "highlight": "سنگین",
         "visual": "particles",
         "icon": "low-battery",
-        "transition": "slide"
+        "transition": "slide",
+        "layout": "card",
+        "data": {
+          "title": "کارهای ساده، سنگین می‌شن",
+          "body": "سه نشونه رو ببین. یک، کار ساده‌ای مثل جواب دادن به پیام هم سنگین به نظر می‌رسه.",
+          "icon": "low-battery"
+        }
       },
       {
         "text_on_screen": "تمرکزت زود می‌پره",
@@ -32,7 +43,15 @@
         "highlight": "می‌پره",
         "visual": "waves",
         "icon": "eye",
-        "transition": "glitch"
+        "transition": "glitch",
+        "layout": "list",
+        "data": {
+          "title": "تمرکزت زود می‌پره",
+          "items": [
+            "دو",
+            "وسط کار مدام سراغ چیزهای دیگه می‌ری"
+          ]
+        }
       },
       {
         "text_on_screen": "شروع واقعاً سخته",
@@ -40,7 +59,12 @@
         "highlight": "شروع",
         "visual": "geometry",
         "icon": "checklist",
-        "transition": "zoom"
+        "transition": "zoom",
+        "layout": "headline",
+        "data": {
+          "text": "شروع واقعاً سخته",
+          "accentWord": "شروع"
+        }
       },
       {
         "text_on_screen": "فقط یک قدم کوچیک",
@@ -48,7 +72,13 @@
         "highlight": "کوچیک",
         "visual": "neural",
         "icon": "heart",
-        "transition": "slide"
+        "transition": "slide",
+        "layout": "card",
+        "data": {
+          "title": "فقط یک قدم کوچیک",
+          "body": "به‌جای سرزنش خودت، کمی فاصله بگیر، آب بخور، فقط یک قدم کوچیک بردار. فالو کن برای فردا.",
+          "icon": "heart"
+        }
       }
     ],
     "caption": "گاهی ذهنت به کمی استراحت نیاز داره، نه سرزنش. تو کدوم‌یک از این سه نشونه رو تجربه کردی؟",
@@ -80,7 +110,12 @@
         "highlight": "نیمه‌تمام",
         "visual": "particles",
         "icon": "question",
-        "transition": "zoom"
+        "transition": "zoom",
+        "layout": "headline",
+        "data": {
+          "text": "کار نیمه‌تمام",
+          "accentWord": "نیمه‌تمام"
+        }
       },
       {
         "text_on_screen": "اثر زیگارنیک",
@@ -88,7 +123,13 @@
         "highlight": "زیگارنیک",
         "visual": "geometry",
         "icon": "clock",
-        "transition": "slide"
+        "transition": "slide",
+        "layout": "card",
+        "data": {
+          "title": "اثر زیگارنیک",
+          "body": "به این اتفاق اثر زیگارنیک می‌گن.",
+          "icon": "clock"
+        }
       },
       {
         "text_on_screen": "ذهن، ناتمام‌ها",
@@ -96,7 +137,16 @@
         "highlight": "ناتمام‌ها",
         "visual": "neural",
         "icon": "brain",
-        "transition": "glitch"
+        "transition": "glitch",
+        "layout": "list",
+        "data": {
+          "title": "ذهن، ناتمام‌ها",
+          "items": [
+            "گاهی ذهن",
+            "کارهای ناتمام رو راحت‌تر از کارهای کامل به یاد میاره",
+            "برای همین ممکنه وسط استراحت هم بهشون فکر کنی"
+          ]
+        }
       },
       {
         "text_on_screen": "یادداشت قدم بعدی",
@@ -104,7 +154,13 @@
         "highlight": "یادداشت",
         "visual": "waves",
         "icon": "checklist",
-        "transition": "zoom"
+        "transition": "zoom",
+        "layout": "card",
+        "data": {
+          "title": "یادداشت قدم بعدی",
+          "body": "یه راه ساده اینه: قبل از توقف، قدم بعدی رو یادداشت کن.",
+          "icon": "checklist"
+        }
       },
       {
         "text_on_screen": "بازگشت روشن‌تر",
@@ -112,7 +168,12 @@
         "highlight": "روشن‌تر",
         "visual": "particles",
         "icon": "lightbulb",
-        "transition": "slide"
+        "transition": "slide",
+        "layout": "headline",
+        "data": {
+          "text": "بازگشت روشن‌تر",
+          "accentWord": "روشن‌تر"
+        }
       }
     ],
     "caption": "گاهی کارهای ناتمام بیشتر از چیزی که فکر می‌کنیم در ذهنمان باقی می‌مانند. تو چه کار نیمه‌تمامی داری؟",
@@ -144,7 +205,12 @@
         "highlight": "انرژی‌بر",
         "visual": "waves",
         "icon": "low-battery",
-        "transition": "zoom"
+        "transition": "zoom",
+        "layout": "headline",
+        "data": {
+          "text": "شروع انرژی‌بر",
+          "accentWord": "انرژی‌بر"
+        }
       },
       {
         "text_on_screen": "قانون دو دقیقه",
@@ -152,7 +218,13 @@
         "highlight": "دو",
         "visual": "neural",
         "icon": "clock",
-        "transition": "slide"
+        "transition": "slide",
+        "layout": "bignumber",
+        "data": {
+          "value": 2,
+          "unit": "دقیقه",
+          "label": "برای شروع، فقط دو دقیقه"
+        }
       },
       {
         "text_on_screen": "یک قدم کوچیک",
@@ -160,7 +232,16 @@
         "highlight": "کوچیک",
         "visual": "particles",
         "icon": "checklist",
-        "transition": "glitch"
+        "transition": "glitch",
+        "layout": "list",
+        "data": {
+          "title": "یک قدم کوچیک",
+          "items": [
+            "می‌خوای درس بخونی",
+            "کتاب رو باز کن و یک پاراگراف بخون",
+            "می‌خوای مرتب‌کاری کنی"
+          ]
+        }
       },
       {
         "text_on_screen": "شروع، نه پایان",
@@ -168,7 +249,12 @@
         "highlight": "شروع",
         "visual": "geometry",
         "icon": "lightbulb",
-        "transition": "zoom"
+        "transition": "zoom",
+        "layout": "headline",
+        "data": {
+          "text": "شروع، نه پایان",
+          "accentWord": "شروع"
+        }
       },
       {
         "text_on_screen": "انتخاب با توست",
@@ -176,7 +262,13 @@
         "highlight": "انتخاب",
         "visual": "waves",
         "icon": "heart",
-        "transition": "slide"
+        "transition": "slide",
+        "layout": "card",
+        "data": {
+          "title": "انتخاب با توست",
+          "body": "بعدش خودت تصمیم بگیر ادامه بدی یا نه. فالو کن برای فردا.",
+          "icon": "heart"
+        }
       }
     ],
     "caption": "قرار نیست در دو دقیقه همه‌چیز رو تموم کنی؛ فقط شروع کن. امروز چه کاری رو با این روش شروع می‌کنی؟",

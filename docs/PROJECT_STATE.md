@@ -42,7 +42,14 @@ Last verified: 2026-11-18
 
 1. Run **Daily Video Factory** once on the current `main` and confirm it is green. A saved browser GitHub session expired during the last dispatch attempt; the owner must sign in and save the existing TinyFish browser profile before the run can be dispatched from the browser.
 2. Inspect the resulting main-branch MP4 and contact sheet, including frame-0 hook, word-by-word subtitles, at least 1.2s CTA visibility, no dark gap and last-frame/first-frame match.
-3. Motion Kit V1 and `kit-demo` are being developed on a new backup-protected feature branch. Do not merge that branch until the owner confirms.
+3. Motion Kit V1 and `kit-demo` are being developed on `feature/motion-kit-v1-2026-11-18`; rollback snapshot: `backup/pre-motion-kit-v1-2026-11-18`. Do not merge it until the owner confirms.
+
+## Motion Kit V1 branch
+
+- Feature branch: `feature/motion-kit-v1-2026-11-18`.
+- Pre-change backup: `backup/pre-motion-kit-v1-2026-11-18`.
+- Kit components, layouts, tokens, demo composition and the dedicated manual workflow are being added here.
+- Pending: green tests, rendered demo, two-second contact sheet and Release verification. Keep this branch unmerged until owner approval.
 
 ## Known issues / cautions
 

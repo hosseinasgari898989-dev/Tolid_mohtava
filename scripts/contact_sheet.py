@@ -98,6 +98,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--video", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--every-seconds", type=int, default=0, help="Sample every N seconds instead of the standard editorial timestamps.")
     args = parser.parse_args()
 
     video = Path(args.video)
@@ -107,13 +108,16 @@ def main():
 
     fps, frame_count, duration = probe_video(video)
     last_frame = frame_count - 1
-    sample_seconds = SAMPLE_SECONDS + [
-        seconds for seconds in ENDING_SAMPLE_SECONDS
-        if seconds > SAMPLE_SECONDS[-1] and seconds < duration - 0.5
-    ]
+    if args.every_seconds > 0:
+        sample_seconds = [seconds for seconds in range(0, int(duration), args.every_seconds) if seconds < duration - 0.5]
+    else:
+        sample_seconds = SAMPLE_SECONDS + [
+            seconds for seconds in ENDING_SAMPLE_SECONDS
+            if seconds > SAMPLE_SECONDS[-1] and seconds < duration - 0.5
+        ]
     requested = [round(seconds * fps) for seconds in sample_seconds]
-    if duration <= SAMPLE_SECONDS[-1] or any(index >= frame_count for index in requested):
-        raise RuntimeError("The rendered video is too short for all requested still-frame timestamps.")
+    if not sample_seconds or any(index >= frame_count for index in requested):
+        raise RuntimeError("The rendered video is too short for the requested still-frame timestamps.")
     frame_indices = requested + [last_frame]
     if len(set(frame_indices)) != len(frame_indices):
         raise RuntimeError("A requested sample timestamp overlaps the final frame.")

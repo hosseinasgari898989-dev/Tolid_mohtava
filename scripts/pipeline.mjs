@@ -9,7 +9,8 @@ const ICONS = new Set([
   "checklist", "question", "heart", "eye"
 ]);
 const VISUALS = new Set(["neural", "particles", "waves", "geometry"]);
-const TRANSITIONS = new Set(["zoom", "slide", "glitch"]);
+const TRANSITIONS = new Set(["zoom", "slide", "glitch", "wipe"]);
+const LAYOUTS = new Set(["headline", "bignumber", "chart", "timeline", "comparison", "card", "list"]);
 
 function writeOutputs(values) {
   const output = process.env.GITHUB_OUTPUT;
@@ -118,8 +119,10 @@ function validateBank(bank) {
         throw new Error(`${sceneLabel}: unsupported icon.`);
       }
       if (scene.transition !== undefined && !TRANSITIONS.has(scene.transition)) {
-        throw new Error(`${sceneLabel}: transition must be zoom, slide, or glitch.`);
+        throw new Error(`${sceneLabel}: transition must be zoom, slide, glitch, or wipe.`);
       }
+      if (!LAYOUTS.has(scene.layout)) throw new Error(`${sceneLabel}: invalid layout.`);
+      if (!scene.data || typeof scene.data !== "object" || Array.isArray(scene.data)) throw new Error(`${sceneLabel}: data must be an object.`);
       narrationTokens.push(...normalizedTokens(scene.narration));
     }
 
@@ -209,6 +212,8 @@ function mapSceneTimings(scenes, words) {
       visual: scene.visual || ["neural", "particles", "waves", "geometry"][index % 4],
       icon: scene.icon || "",
       transition: scene.transition || "zoom",
+      layout: scene.layout || "headline",
+      data: scene.data || { text: scene.text_on_screen },
       startSeconds,
       endSeconds,
       spokenEndSeconds,
