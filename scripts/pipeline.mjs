@@ -212,7 +212,7 @@ function mapSceneTimings(scenes, words) {
       startSeconds,
       endSeconds,
       spokenEndSeconds,
-      startFrame: Math.max(0, Math.round(startSeconds * FPS)),
+      startFrame: index === 0 ? 0 : Math.max(0, Math.round(startSeconds * FPS)),
       endFrame: Math.max(1, Math.round(endSeconds * FPS))
     };
   });
@@ -286,6 +286,14 @@ async function main() {
 
   const words = JSON.parse(fs.readFileSync(wordsPath, "utf8"));
   const scenes = mapSceneTimings(video.scenes, words);
+  console.log("Scene frame schedule:", JSON.stringify(
+    scenes.map((scene, index) => ({
+      scene: index + 1,
+      startSeconds: scene.startSeconds,
+      startFrame: scene.startFrame,
+      endFrame: scene.endFrame
+    }))
+  ));
 
   fs.writeFileSync(
     "out/audio-scenes.json",

@@ -160,6 +160,18 @@ jobs:
           VIDEO_ID: ${{ inputs.video_id || 'brain-tired-001' }}
         run: node scripts/pipeline.mjs
 
+      - name: Upload loop diagnostics if the build fails
+        if: failure()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@v4
+        with:
+          name: loop-diagnostics-${{ github.run_id }}
+          path: |
+            out/brain-tired-001-contact-sheet.png
+            out/contact-sheet-frames/*.png
+          if-no-files-found: warn
+          retention-days: 1
+
       - name: Upload video, caption and contact sheet to GitHub Release
         if: steps.pipeline.outputs.has_video == 'true'
         timeout-minutes: 3

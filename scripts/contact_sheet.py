@@ -114,6 +114,10 @@ def main():
 
     frame_dir = output.parent / "contact-sheet-frames"
     paths = extract_frames(video, frame_indices, fps, frame_dir)
+    labels = [str(seconds) + "s" for seconds in SAMPLE_SECONDS] + ["Last frame"]
+    make_contact_sheet(paths, labels, output)
+    print("Created contact sheet: " + str(output))
+
     first = np.asarray(Image.open(paths[0]).convert("RGB"), dtype=np.int16)
     last = np.asarray(Image.open(paths[-1]).convert("RGB"), dtype=np.int16)
     mean_absolute_error = float(np.abs(first - last).mean())
@@ -127,10 +131,6 @@ def main():
         raise RuntimeError(
             "The final frame does not visually match the first cover frame closely enough."
         )
-
-    labels = [str(seconds) + "s" for seconds in SAMPLE_SECONDS] + ["Last frame"]
-    make_contact_sheet(paths, labels, output)
-    print("Created contact sheet: " + str(output))
 
 
 if __name__ == "__main__":
