@@ -40,7 +40,7 @@ Last verified: 2026-11-18
 
 ## Pending
 
-1. Run **Daily Video Factory** once on the current `main` and confirm it is green. A saved browser GitHub session expired during the last dispatch attempt; the owner must sign in and save the existing TinyFish browser profile before the run can be dispatched from the browser.
+1. Owner to run **Daily Video Factory** on `main` from the GitHub phone UI and verify the post-merge main MP4/contact sheet.
 2. Inspect the resulting main-branch MP4 and contact sheet, including frame-0 hook, word-by-word subtitles, at least 1.2s CTA visibility, no dark gap and last-frame/first-frame match.
 3. Motion Kit V1 and `kit-demo` are being developed on `feature/motion-kit-v1-2026-11-18`; rollback snapshot: `backup/pre-motion-kit-v1-2026-11-18`. Do not merge it until the owner confirms.
 
@@ -64,5 +64,4 @@ Last verified: 2026-11-18
 
 - The failure-only diagnostic Artifact upload of contact-sheet frames has been removed from `main`; generated MP4s and contact sheets are uploaded only to GitHub Releases.
 - The repository had no `docs/PROJECT_STATE.md` before this file was added.
-- The saved browser profile's GitHub sign-in may expire. Do not ask for or store passwords in chat; use the saved profile's sign-in page.
 - Run #10's video and contact-sheet assets were verified by workflow logs and Release asset metadata. A separate visual inspection of the binary image/video was not available in the prior browser session.
