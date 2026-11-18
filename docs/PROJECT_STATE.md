@@ -54,6 +54,11 @@ Last verified: 2026-11-18
 - The saved GitHub browser session is expired. Daily main verification and the `kit-demo` render/Release remain pending a fresh sign-in and actual workflow runs.
 - Keep this branch unmerged until owner approval.
 
+## Licensing note
+
+- Remotion's official Free License covers individuals and teams of up to 3 people, including automated rendering and commercial video creation. Larger for-profit organizations may need a paid Company License; re-check eligibility if the project team or operating entity changes.
+- No paid stock provider or paid external rendering service was added by Motion Kit V1.
+
 ## Known issues / cautions
 
 - The failure-only diagnostic Artifact upload of contact-sheet frames has been removed from `main`; generated MP4s and contact sheets are uploaded only to GitHub Releases.
