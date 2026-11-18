@@ -1,5 +1,6 @@
 import argparse
 import json
+import math
 import subprocess
 from fractions import Fraction
 from pathlib import Path
@@ -12,6 +13,7 @@ TILE_WIDTH = 300
 TILE_HEIGHT = 533
 LABEL_HEIGHT = 48
 SAMPLE_SECONDS = [0, 1, 3, 6, 10, 15, 20]
+ENDING_SAMPLE_SECONDS = [22, 23, 24]
 
 
 def probe_video(path):
@@ -68,7 +70,7 @@ def extract_frames(video, frame_indices, fps, output_dir):
 
 def make_contact_sheet(paths, labels, output_path):
     columns = 4
-    rows = 2
+    rows = math.ceil(len(paths) / columns)
     cell_height = TILE_HEIGHT + LABEL_HEIGHT
     sheet = Image.new("RGB", (columns * TILE_WIDTH, rows * cell_height), "#080d20")
     draw = ImageDraw.Draw(sheet)
@@ -105,7 +107,11 @@ def main():
 
     fps, frame_count, duration = probe_video(video)
     last_frame = frame_count - 1
-    requested = [round(seconds * fps) for seconds in SAMPLE_SECONDS]
+    sample_seconds = SAMPLE_SECONDS + [
+        seconds for seconds in ENDING_SAMPLE_SECONDS
+        if seconds > SAMPLE_SECONDS[-1] and seconds < duration - 0.5
+    ]
+    requested = [round(seconds * fps) for seconds in sample_seconds]
     if duration <= SAMPLE_SECONDS[-1] or any(index >= frame_count for index in requested):
         raise RuntimeError("The rendered video is too short for all requested still-frame timestamps.")
     frame_indices = requested + [last_frame]
@@ -114,7 +120,7 @@ def main():
 
     frame_dir = output.parent / "contact-sheet-frames"
     paths = extract_frames(video, frame_indices, fps, frame_dir)
-    labels = [str(seconds) + "s" for seconds in SAMPLE_SECONDS] + ["Last frame"]
+    labels = [str(seconds) + "s" for seconds in sample_seconds] + ["Last frame"]
     make_contact_sheet(paths, labels, output)
     print("Created contact sheet: " + str(output))
 
@@ -123,7 +129,7 @@ def main():
     mean_absolute_error = float(np.abs(first - last).mean())
     changed_pixel_percent = float((np.max(np.abs(first - last), axis=2) > 24).mean() * 100)
 
-    print("Contact-sheet frames: " + ", ".join(str(value) + "s" for value in SAMPLE_SECONDS) + ", last frame.")
+    print("Contact-sheet frames: " + ", ".join(str(value) + "s" for value in sample_seconds) + ", last frame.")
     print("First/last frame comparison: MAE={:.3f}, pixels with channel delta >24={:.3f}%.".format(
         mean_absolute_error, changed_pixel_percent
     ))
