@@ -99,6 +99,7 @@ def main():
     parser.add_argument("--video", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--every-seconds", type=int, default=0, help="Sample every N seconds instead of the standard editorial timestamps.")
+    parser.add_argument("--skip-loop-check", action="store_true", help="Skip first/last-frame comparison for non-looping demos.")
     args = parser.parse_args()
 
     video = Path(args.video)
@@ -137,7 +138,7 @@ def main():
     print("First/last frame comparison: MAE={:.3f}, pixels with channel delta >24={:.3f}%.".format(
         mean_absolute_error, changed_pixel_percent
     ))
-    if mean_absolute_error > 5.0 or changed_pixel_percent > 2.0:
+    if not args.skip_loop_check and (mean_absolute_error > 5.0 or changed_pixel_percent > 2.0):
         raise RuntimeError(
             "The final frame does not visually match the first cover frame closely enough."
         )
