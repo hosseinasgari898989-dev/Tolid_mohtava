@@ -35,7 +35,7 @@
         "transition": "glitch"
       },
       {
-        "text_on_screen": "شروع کردن از خود کار سخته",
+        "text_on_screen": "شروع واقعاً سخته",
         "narration": "سه، شروع کردن از خود کار سخت‌تر شده.",
         "highlight": "شروع",
         "visual": "geometry",
@@ -43,7 +43,7 @@
         "transition": "zoom"
       },
       {
-        "text_on_screen": "یک قدم کوچیک بردار",
+        "text_on_screen": "فقط یک قدم کوچیک",
         "narration": "به‌جای سرزنش خودت، کمی فاصله بگیر، آب بخور، فقط یک قدم کوچیک بردار. فالو کن برای فردا.",
         "highlight": "کوچیک",
         "visual": "neural",
@@ -75,9 +75,9 @@
     "pitch": "+0Hz",
     "scenes": [
       {
-        "text_on_screen": "چرا کار نصفه، توی ذهن می‌مونه؟",
+        "text_on_screen": "کار نیمه‌تمام",
         "narration": "چرا کاری که نصفه رها کردی، مدام توی ذهنت برمی‌گرده؟",
-        "highlight": "نصفه",
+        "highlight": "نیمه‌تمام",
         "visual": "particles",
         "icon": "question",
         "transition": "zoom"
@@ -91,7 +91,7 @@
         "transition": "slide"
       },
       {
-        "text_on_screen": "ذهن، ناتمام‌ها رو به یاد میاره",
+        "text_on_screen": "ذهن، ناتمام‌ها",
         "narration": "گاهی ذهن، کارهای ناتمام رو راحت‌تر از کارهای کامل به یاد میاره. برای همین ممکنه وسط استراحت هم بهشون فکر کنی.",
         "highlight": "ناتمام‌ها",
         "visual": "neural",
@@ -99,7 +99,7 @@
         "transition": "glitch"
       },
       {
-        "text_on_screen": "قدم بعدی رو یادداشت کن",
+        "text_on_screen": "یادداشت قدم بعدی",
         "narration": "یه راه ساده اینه: قبل از توقف، قدم بعدی رو یادداشت کن.",
         "highlight": "یادداشت",
         "visual": "waves",
@@ -107,7 +107,7 @@
         "transition": "zoom"
       },
       {
-        "text_on_screen": "برگشتن به کار، روشن‌تر می‌شه",
+        "text_on_screen": "بازگشت روشن‌تر",
         "narration": "این‌طوری برگشتن به کار روشن‌تر می‌شه. فالو کن برای فردا.",
         "highlight": "روشن‌تر",
         "visual": "particles",
@@ -139,15 +139,15 @@
     "pitch": "+0Hz",
     "scenes": [
       {
-        "text_on_screen": "برای شروع، انرژی زیاد نمی‌خواد",
+        "text_on_screen": "شروع انرژی‌بر",
         "narration": "برای شروع یک کار، لازم نیست از همون اول کلی انرژی بذاری.",
-        "highlight": "انرژی",
+        "highlight": "انرژی‌بر",
         "visual": "waves",
         "icon": "low-battery",
         "transition": "zoom"
       },
       {
-        "text_on_screen": "قانون دو دقیقه رو اجرا کن",
+        "text_on_screen": "قانون دو دقیقه",
         "narration": "قانون دو دقیقه رو امتحان کن، فقط دو دقیقه شروعش کن.",
         "highlight": "دو",
         "visual": "neural",
@@ -155,7 +155,7 @@
         "transition": "slide"
       },
       {
-        "text_on_screen": "فقط یک قدم کوچیک بردار",
+        "text_on_screen": "یک قدم کوچیک",
         "narration": "می‌خوای درس بخونی؟ کتاب رو باز کن و یک پاراگراف بخون. می‌خوای مرتب‌کاری کنی؟ فقط یک قسمت کوچیک رو جمع کن.",
         "highlight": "کوچیک",
         "visual": "particles",
@@ -163,7 +163,7 @@
         "transition": "glitch"
       },
       {
-        "text_on_screen": "هدف، فقط شروع کردنه",
+        "text_on_screen": "شروع، نه پایان",
         "narration": "هدف، تموم کردن کار نیست؛ فقط شکستن سختی شروعه.",
         "highlight": "شروع",
         "visual": "geometry",
@@ -171,7 +171,7 @@
         "transition": "zoom"
       },
       {
-        "text_on_screen": "ادامه دادن، انتخاب خودته",
+        "text_on_screen": "انتخاب با توست",
         "narration": "بعدش خودت تصمیم بگیر ادامه بدی یا نه. فالو کن برای فردا.",
         "highlight": "انتخاب",
         "visual": "waves",

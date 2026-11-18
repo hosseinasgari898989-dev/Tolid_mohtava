@@ -62,8 +62,9 @@ function GlowDefs({ id }) {
   );
 }
 
-export const NeuralBackground = ({ seed }) => {
-  const frame = useCurrentFrame();
+export const NeuralBackground = ({ seed, frameOverride }) => {
+  const currentFrame = useCurrentFrame();
+  const frame = frameOverride ?? currentFrame;
 
   const nodes = useMemo(() => {
     const random = createRandom(seed);
@@ -151,8 +152,9 @@ export const NeuralBackground = ({ seed }) => {
   );
 };
 
-export const ParticlesBackground = ({ seed }) => {
-  const frame = useCurrentFrame();
+export const ParticlesBackground = ({ seed, frameOverride }) => {
+  const currentFrame = useCurrentFrame();
+  const frame = frameOverride ?? currentFrame;
 
   const particles = useMemo(() => {
     const random = createRandom(seed);
@@ -210,8 +212,9 @@ export const ParticlesBackground = ({ seed }) => {
   );
 };
 
-export const WavesBackground = ({ seed }) => {
-  const frame = useCurrentFrame();
+export const WavesBackground = ({ seed, frameOverride }) => {
+  const currentFrame = useCurrentFrame();
+  const frame = frameOverride ?? currentFrame;
 
   const random = createRandom(seed);
   const layers = Array.from({ length: 8 }, (_, index) => ({
@@ -267,8 +270,9 @@ export const WavesBackground = ({ seed }) => {
   );
 };
 
-export const GeometryBackground = ({ seed }) => {
-  const frame = useCurrentFrame();
+export const GeometryBackground = ({ seed, frameOverride }) => {
+  const currentFrame = useCurrentFrame();
+  const frame = frameOverride ?? currentFrame;
   const { fps } = useVideoConfig();
 
   const random = createRandom(seed);
@@ -371,7 +375,8 @@ const VISUAL_STYLES = [
 export const VisualBackground = ({
   visual,
   videoId,
-  sceneIndex
+  sceneIndex,
+  frameOverride
 }) => {
   const videoSeed = hashSeed(videoId || "zehn-khan");
   const style = visual || VISUAL_STYLES[
@@ -383,19 +388,19 @@ export const VisualBackground = ({
 
   switch (style) {
     case "neural":
-      background = <NeuralBackground seed={seed} />;
+      background = <NeuralBackground seed={seed} frameOverride={frameOverride} />;
       break;
     case "particles":
-      background = <ParticlesBackground seed={seed} />;
+      background = <ParticlesBackground seed={seed} frameOverride={frameOverride} />;
       break;
     case "waves":
-      background = <WavesBackground seed={seed} />;
+      background = <WavesBackground seed={seed} frameOverride={frameOverride} />;
       break;
     case "geometry":
-      background = <GeometryBackground seed={seed} />;
+      background = <GeometryBackground seed={seed} frameOverride={frameOverride} />;
       break;
     default:
-      background = <NeuralBackground seed={seed} />;
+      background = <NeuralBackground seed={seed} frameOverride={frameOverride} />;
   }
 
   return (

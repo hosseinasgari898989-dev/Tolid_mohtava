@@ -96,8 +96,8 @@ function validateBank(bank) {
       }
 
       const screenWords = scene.text_on_screen.trim().split(/\s+/u);
-      if (screenWords.length > 7) {
-        throw new Error(`${sceneLabel}: on-screen text has ${screenWords.length} words; maximum is 7.`);
+      if (screenWords.length < 2 || screenWords.length > 4) {
+        throw new Error(`${sceneLabel}: headline must contain 2–4 words; received ${screenWords.length}.`);
       }
 
       if (scene.highlight !== undefined) {
@@ -140,7 +140,7 @@ function validateBank(bank) {
     }
   }
 
-  console.log(`Validated ${bank.length} videos, narration coverage, scene length, highlights, icons, transitions and TTS configuration.`);
+  console.log(`Validated ${bank.length} videos, 2–4-word headlines, narration coverage, highlights, icons, transitions and TTS configuration.`);
 }
 
 function mapSceneTimings(scenes, words) {
@@ -176,7 +176,11 @@ function mapSceneTimings(scenes, words) {
       throw new Error(`Invalid real word timings in scene ${sceneIndex + 1}.`);
     }
     cursor = found + expected.length;
-    return { first, last };
+    const subtitleTimings = expected.map((token, offset) => {
+      const timing = timingTokens[found + offset];
+      return { start: timing.start, end: timing.end };
+    });
+    return { first, last, subtitleTimings };
   });
 
   return scenes.map((scene, index) => {
@@ -188,8 +192,18 @@ function mapSceneTimings(scenes, words) {
     if (endSeconds <= startSeconds) {
       throw new Error(`Scene ${index + 1} has a non-positive duration.`);
     }
+    const displayTokens = [...scene.narration.matchAll(/[\p{L}\p{N}]+/gu)];
+    if (displayTokens.length !== normalizedTokens(scene.narration).length) {
+      throw new Error(`Scene ${index + 1} subtitle token alignment is inconsistent.`);
+    }
+    const subtitleWords = displayTokens.map((match, offset) => ({
+      text: match[0],
+      startSeconds: matched[index].subtitleTimings[offset].start,
+      endSeconds: matched[index].subtitleTimings[offset].end
+    }));
     return {
       textOnScreen: scene.text_on_screen,
+      subtitleWords,
       narration: scene.narration,
       highlight: scene.highlight || "",
       visual: scene.visual || ["neural", "particles", "waves", "geometry"][index % 4],
@@ -198,7 +212,7 @@ function mapSceneTimings(scenes, words) {
       startSeconds,
       endSeconds,
       spokenEndSeconds,
-      startFrame: Math.max(0, Math.round(startSeconds * FPS)),
+      startFrame: index === 0 ? 0 : Math.max(0, Math.round(startSeconds * FPS)),
       endFrame: Math.max(1, Math.round(endSeconds * FPS))
     };
   });
@@ -272,6 +286,14 @@ async function main() {
 
   const words = JSON.parse(fs.readFileSync(wordsPath, "utf8"));
   const scenes = mapSceneTimings(video.scenes, words);
+  console.log("Scene frame schedule:", JSON.stringify(
+    scenes.map((scene, index) => ({
+      scene: index + 1,
+      startSeconds: scene.startSeconds,
+      startFrame: scene.startFrame,
+      endFrame: scene.endFrame
+    }))
+  ));
 
   fs.writeFileSync(
     "out/audio-scenes.json",
@@ -316,7 +338,7 @@ async function main() {
   fs.writeFileSync(propsPath, JSON.stringify(props, null, 2), "utf8");
 
   const videoPath = `out/${video.id}.mp4`;
-  console.log("Rendering the V2 motion-graphics video (10-minute render guard)...");
+  console.log("Rendering the V3 polished motion-graphics video (10-minute render guard)...");
   execFileSync("npx", [
     "remotion", "render", "src/index.jsx", "Video", videoPath,
     `--props=${propsPath}`,
@@ -338,13 +360,22 @@ async function main() {
     throw new Error("Rendered video duration is shorter than its narration.");
   }
 
-  console.log(`Successfully rendered V2 ${video.id} (${renderedDuration.toFixed(2)}s).`);
+  console.log(`Successfully rendered V3 ${video.id} (${renderedDuration.toFixed(2)}s).`);
+
+  const contactSheetPath = "out/" + video.id + "-contact-sheet.png";
+  console.log("Extracting requested sample frames and verifying the loop cover match...");
+  execFileSync("python3", [
+    "scripts/contact_sheet.py",
+    "--video", videoPath,
+    "--output", contactSheetPath
+  ], { stdio: "inherit" });
 
   const outputs = {
     has_video: "true",
     video_id: video.id,
     video_path: videoPath,
     caption_path: captionPath,
+    contact_sheet_path: contactSheetPath,
     has_voice_samples: "false"
   };
 
