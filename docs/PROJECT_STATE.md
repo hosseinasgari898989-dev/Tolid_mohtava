@@ -5,7 +5,7 @@ Last verified: 2026-11-18
 ## Repository and current main
 
 - Repository: `hosseinasgari898989-dev/Tolid_mohtava` (public; keep public).
-- Main after both approved merges: `a5a6157a31dcee8529c868242537d1560d523bd1`.
+- Main after both approved merges: `a5a6157a31dcee8529c868242537d1560d523bd1` (followed by a small workflow-safety commit removing the failure-only media Artifact upload).
 - PR #1, “Upgrade Remotion video factory to V2”: merged at `19226216d6c8956a013d6e23c3245bda479776f0`.
 - PR #2, “Fix V3 closing CTA timing and seamless outro”: merged at `a5a6157a31dcee8529c868242537d1560d523bd1`.
 - The two requested backups remain present: `backup/pre-motion-graphics-v2-2026-11-17` and `backup/pre-v3-regression-2026-11-18`. Do not delete them.
@@ -46,7 +46,7 @@ Last verified: 2026-11-18
 
 ## Known issues / cautions
 
-- The current main workflow includes a failure-only diagnostic upload step for contact-sheet frames. Keep all successful MP4/contact-sheet outputs Release-only; remove/replace that diagnostic artifact step in the Motion Kit branch so generated frames are never uploaded as Artifacts.
+- The failure-only diagnostic Artifact upload of contact-sheet frames has been removed from `main`; generated MP4s and contact sheets are uploaded only to GitHub Releases.
 - The repository had no `docs/PROJECT_STATE.md` before this file was added.
 - The saved browser profile's GitHub sign-in may expire. Do not ask for or store passwords in chat; use the saved profile's sign-in page.
 - Run #10's video and contact-sheet assets were verified by workflow logs and Release asset metadata. A separate visual inspection of the binary image/video was not available in the prior browser session.
