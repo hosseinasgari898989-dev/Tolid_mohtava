@@ -27,7 +27,7 @@ const DemoFrame = ({ section, label, title, variant = "grid", children }) => (
         {children}
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", color: "rgba(198,211,244,.58)", fontSize: 22, fontWeight: 700 }}>
-        <span>ذهن‌خوان</span><span>MOTION KIT V1</span>
+        <span>ذهن‌خوان</span><span>MOTION KIT V1 · داده‌های فرضی</span>
       </div>
     </div>
   </AbsoluteFill>
@@ -38,15 +38,15 @@ export const KitDemo = () => (
     <TransitionSeries.Sequence durationInFrames={120}>
       <DemoFrame section="01" label="حرکت متن" title="یک عدد، یک داستان">
         <KineticHeadline text="هر حقیقت، یک تصویر روشن" accentWord="حقیقت" fontSize={76} />
-        <BigNumber value={12} unit="٪" label="نمونه شمارنده متحرک" />
+        <BigNumber value={12} unit="٪" label="عدد فرضی برای تست شمارنده" />
       </DemoFrame>
     </TransitionSeries.Sequence>
     {makeSceneTransition("slide", 18)}
     <TransitionSeries.Sequence durationInFrames={120}>
       <DemoFrame section="02" label="داده‌نمایی" title="داده را ساده ببین">
-        <BarChart title="مقایسه نمایشی" data={[{ label: "گروه اول", value: 82 }, { label: "گروه دوم", value: 54 }, { label: "گروه سوم", value: 36 }]} />
-        <LineChart title="روند نمونه" data={[{ value: 22 }, { value: 44 }, { value: 34 }, { value: 74 }, { value: 88 }]} />
-        <DonutChart value={68} total={100} label="نمایش نسبت" />
+        <BarChart title="اعداد فرضی برای تست نمودار" data={[{ label: "گروه اول", value: 82 }, { label: "گروه دوم", value: 54 }, { label: "گروه سوم", value: 36 }]} />
+        <LineChart title="روند ساختگی برای تست" data={[{ value: 22 }, { value: 44 }, { value: 34 }, { value: 74 }, { value: 88 }]} />
+        <DonutChart value={68} total={100} label="درصد فرضی برای تست" />
       </DemoFrame>
     </TransitionSeries.Sequence>
     {makeSceneTransition("wipe", 18)}
