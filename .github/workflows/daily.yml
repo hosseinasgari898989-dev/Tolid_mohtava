@@ -230,6 +230,13 @@ jobs:
           set -Eeuo pipefail
           node scripts/pipeline.mjs
 
+      - name: Stop clearly when no eligible production or fact-test item is selected
+        if: (inputs.target == 'video' || inputs.target == 'kit-test') && steps.pipeline.outputs.has_video != 'true'
+        timeout-minutes: 1
+        run: |
+          echo "::error::No eligible item was rendered. For target=video, content_bank.json needs a verified item with status=pending; do not render done/draft TO_VERIFY entries." >&2
+          exit 1
+
       - name: Upload production or fact-test outputs to GitHub Release
         if: (inputs.target == 'video' || inputs.target == 'kit-test') && steps.pipeline.outputs.has_video == 'true'
         timeout-minutes: 5
@@ -281,21 +288,21 @@ jobs:
           gh release upload "$TAG" "$FARID_PATH" "$DILARA_PATH" --clobber
 
       - name: Fail the workflow after publishing a failed QA report
-        if: (inputs.target == 'video' || inputs.target == 'kit-test') && steps.pipeline.outputs.qa_passed != 'true'
+        if: (inputs.target == 'video' || inputs.target == 'kit-test') && steps.pipeline.outputs.has_video == 'true' && steps.pipeline.outputs.qa_passed != 'true'
         timeout-minutes: 1
         run: |
           echo "Production QA gates did not all pass; the QA report was retained in the Release." >&2
           exit 1
 
       - name: Mark normal production item as done
-        if: inputs.target == 'video' && steps.pipeline.outputs.has_video == 'true'
+        if: inputs.target == 'video' && steps.pipeline.outputs.has_video == 'true' && steps.pipeline.outputs.qa_passed == 'true'
         timeout-minutes: 2
         env:
           VIDEO_ID: ${{ steps.pipeline.outputs.video_id }}
         run: node scripts/mark-done.mjs
 
       - name: Commit production completion status to selected branch
-        if: inputs.target == 'video' && steps.pipeline.outputs.has_video == 'true'
+        if: inputs.target == 'video' && steps.pipeline.outputs.has_video == 'true' && steps.pipeline.outputs.qa_passed == 'true'
         timeout-minutes: 2
         shell: bash
         run: |
