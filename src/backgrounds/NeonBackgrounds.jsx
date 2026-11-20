@@ -383,6 +383,10 @@ export const VisualBackground = ({
     (videoSeed + sceneIndex) % VISUAL_STYLES.length
   ];
   const seed = hashSeed(`${videoId}:${sceneIndex}:${style}`);
+  const localFrame = useCurrentFrame();
+  const frame = frameOverride ?? localFrame;
+  const watermarkNumber = String((Number(sceneIndex) || 0) + 1)
+    .replace(/[0-9]/g, digit => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]);
 
   let background;
 
@@ -404,14 +408,34 @@ export const VisualBackground = ({
   }
 
   return (
-    <AbsoluteFill style={{ backgroundColor: NAVY }}>
+    <AbsoluteFill style={{ backgroundColor: NAVY, overflow: "hidden" }}>
       {background}
-      <AbsoluteFill
-        style={{
-          background:
-            "radial-gradient(ellipse at 50% 43%, rgba(57,139,255,0.20), transparent 52%), radial-gradient(ellipse at 18% 22%, rgba(72,230,242,0.16), transparent 36%), radial-gradient(ellipse at 86% 72%, rgba(155,107,255,0.16), transparent 40%), linear-gradient(180deg, rgba(4,8,22,0.02), rgba(4,8,22,0.14))"
-        }}
-      />
+      <AbsoluteFill style={{
+        opacity: 0.22,
+        backgroundImage: "linear-gradient(rgba(130,170,255,.30) 1px, transparent 1px), linear-gradient(90deg, rgba(130,170,255,.30) 1px, transparent 1px)",
+        backgroundSize: "72px 72px"
+      }} />
+      <div style={{ position: "absolute", width: 700, height: 700, top: "-18%", left: "-22%", borderRadius: "50%", background: "radial-gradient(circle, rgba(68,154,255,.30), transparent 70%)", filter: "blur(12px)" }} />
+      <div style={{ position: "absolute", width: 680, height: 680, top: "23%", right: "-28%", borderRadius: "50%", background: "radial-gradient(circle, rgba(155,107,255,.27), transparent 68%)", filter: "blur(14px)" }} />
+      <div style={{ position: "absolute", width: 560, height: 560, bottom: "-25%", left: "18%", borderRadius: "50%", background: "radial-gradient(circle, rgba(72,230,242,.20), transparent 68%)", filter: "blur(12px)" }} />
+      <div style={{
+        position: "absolute", top: "27%", left: 0, right: 0, textAlign: "center",
+        color: "transparent", fontFamily: "Vazirmatn, sans-serif", fontSize: 430,
+        lineHeight: 1, fontWeight: 900, WebkitTextStroke: "3px rgba(128,171,255,.17)",
+        opacity: 0.8, pointerEvents: "none"
+      }}>{watermarkNumber}</div>
+      <svg viewBox="0 0 1080 1920" width="100%" height="100%" style={{ position: "absolute", inset: 0, opacity: 0.30 }}>
+        <g fill="none" strokeLinecap="round">
+          <circle cx={185 + Math.sin(frame / 38) * 20} cy="610" r="42" stroke="rgba(102,228,245,.50)" strokeWidth="3" />
+          <path d="M805 455 l58 58 -58 58 -58 -58 Z" stroke="rgba(255,224,130,.52)" strokeWidth="3" transform={"rotate(" + (frame * 0.35) + " 805 513)"} />
+          <circle cx="875" cy="1450" r="95" stroke="rgba(167,139,250,.45)" strokeWidth="3" strokeDasharray="8 16" />
+          <path d="M120 1390 h180 M210 1300 v180" stroke="rgba(85,184,255,.34)" strokeWidth="3" />
+        </g>
+      </svg>
+      <AbsoluteFill style={{
+        background: "radial-gradient(ellipse at center, transparent 48%, rgba(2,5,15,.60) 100%), linear-gradient(180deg, rgba(4,8,22,.02), rgba(4,8,22,.14))",
+        pointerEvents: "none"
+      }} />
     </AbsoluteFill>
   );
 };

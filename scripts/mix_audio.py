@@ -128,7 +128,8 @@ def normalize_two_pass(input_path, output_path):
         ],
         check=True,
         capture_output=True,
-        text=True
+        text=True,
+        timeout=180
     )
     measured = loudnorm_report(analysis.stderr)
     measured_i = finite_measurement(measured, "input_i")
@@ -154,7 +155,8 @@ def normalize_two_pass(input_path, output_path):
         ],
         check=True,
         capture_output=True,
-        text=True
+        text=True,
+        timeout=180
     )
     final_report = loudnorm_report(normalized.stderr)
     output_i = finite_measurement(final_report, "output_i")
@@ -266,7 +268,7 @@ def main():
         "-c:a", "pcm_s16le",
         str(premaster_path),
     ]
-    subprocess.run(command, check=True)
+    subprocess.run(command, check=True, timeout=240)
     if not premaster_path.exists() or premaster_path.stat().st_size == 0:
         raise RuntimeError("FFmpeg did not create the final premaster mix.")
 
