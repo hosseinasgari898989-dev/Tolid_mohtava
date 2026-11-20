@@ -11,7 +11,7 @@ Last updated: 2026-11-20 (hardening code committed; workflow renders pending)
 - The owner explicitly requires review before merge. **Do not merge PR #3 or any follow-up PR without a separate owner confirmation.**
 - `main` and the backup branch must remain unchanged during this task.
 - Current verified `main` and rollback backup SHA: `ee7dfa8d94c1cfca58c0387c4716ae1af8b7b4ac`.
-- Hardening feature commit at this update: `e73b6246e338bf3e338ac487ab027f98c3ac6de6`; re-check the branch head after subsequent commits.
+- Hardening implementation commits: `e137b982da303cbd0135941b19214ef0b92192c6`, `e73b6246e338bf3e338ac487ab027f98c3ac6de6`, `2e1511aa2e4ac78332a0f4f8326483fb89456594`, `be5d8ee006b7fe9480c25e383d331aa017a7ced7`, and `f43c032e541b454cd524a101c805149651dabe95`. Re-check the current feature branch HEAD before dispatch.
 
 ## Architecture and existing behavior
 
@@ -75,7 +75,7 @@ Last updated: 2026-11-20 (hardening code committed; workflow renders pending)
 2. Tap **Actions**.
 3. Choose **Daily Video Factory**.
 4. Tap **Run workflow**.
-5. Set the branch to `feature/motion-kit-v1-2026-11-18` while the PR is still unmerged.
+5. Set the branch to `feature/motion-kit-v1-2026-11-18` while the PR is still unmerged. The default `main` workflow currently exposes only the older `video_id` form; after selecting the feature branch, verify the form refreshes and shows `target` and `test_id`. If it still shows the old form, do not dispatch with guessed/default inputs.
 6. Choose one target:
    - `kit-demo`: renders the Motion Kit showcase, synthetic audio bed, a 1.5-second contact sheet and QA report. Assets go to the `kit-demo` Release.
    - `kit-test`: choose `venus-day`, `cleopatra-timeline` or `octopus-hearts`. The full narration/subtitle/CTA/loop video is built and assets accumulate in the `kit-test` Release.
