@@ -45,7 +45,7 @@ Last updated: 2026-11-20 (hardening task in progress)
 - Hashtags are limited to five.
 - The three fact-test entries live in `content_bank_test.json` and are separate from the production bank:
   - `venus-day` — comparison; NASA Venus facts: https://science.nasa.gov/venus/venus-facts/
-  - `cleopatra-timeline` — timeline; Egypt Ministry of Tourism and Antiquities dates Khufu to c. 2589–2566 BCE; the University of Michigan Kelsey Museum chronology records Cleopatra's death in 30 BCE; NASA records Apollo 11's landing on 20 July 1969: https://egymonuments.gov.eg/monuments/the-great-pyramid/ ; https://prod.lsa.umich.edu/content/dam/kelsey-assets/kelsey-documents/education/teacher-resource-guides/EDU_curriculum_AEgypt_webready.pdf ; https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo11info.html
+  - `cleopatra-timeline` — timeline; Egypt Ministry of Tourism and Antiquities dates the Great Pyramid to Khufu (c. 2589–2566 BCE); UCL's Digital Egypt records Cleopatra VII's reign through 30 BCE; NASA records Apollo 11's lunar landing on 20 July 1969: https://egymonuments.gov.eg/monuments/the-great-pyramid/ ; https://www.ucl.ac.uk/museums-static/digitalegypt/chronology/cleopatravii.html ; https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo11info.html
   - `octopus-hearts` — card/orbit; Smithsonian Ocean: https://ocean.si.edu/ocean-life/invertebrates/octopuses-squids-and-relatives
 - Those three test sources were checked for the stated claims. Legacy `TO_VERIFY` entries remain unverified.
 

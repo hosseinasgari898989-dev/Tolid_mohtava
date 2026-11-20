@@ -372,10 +372,10 @@ const SceneSubtitles = ({ scenes, fps, hideAfterFrame, frameOverride }) => {
       dir="rtl"
       style={{
         position: "absolute",
-        top: "64%",
+        top: "57%",
         left: 72,
         right: 72,
-        height: "14%",
+        height: "15%",
         maxWidth: 936,
         margin: "0 auto",
         padding: "10px 24px",

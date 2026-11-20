@@ -268,7 +268,7 @@ async function main() {
     "--json-report", "out/contact-sheet-report.json"
   ], { stdio: "inherit", timeout: 3 * 60 * 1000 });
 
-  const qaReportPath = "out/qa-report.json";
+  const qaReportPath = `out/${video.id}-qa-report.json`;
   console.log("Running production QA gates against the rendered MP4...");
   let qaPassed = false;
   try {
