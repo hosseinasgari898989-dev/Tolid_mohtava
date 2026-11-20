@@ -70,7 +70,7 @@ export const StepHeader = ({ step = "01", label = "نکته", title = "", accent
         <div style={{ ...baseText, textAlign: "right", color: C.cyan, fontSize: 28, fontWeight: 800, letterSpacing: 1 }}>{asDisplayText(label)}</div>
         <KineticHeadline text={title} accentWord={accentWord} fontSize={100} maxWidth={880} frameOverride={frame} />
       </div>
-      <IconBadge icon={icon} accent={C.gold} size={180} frameOverride={frame} />
+      <IconBadge icon={icon} accent={C.gold} size={185} frameOverride={frame} />
     </div>
   );
 };
@@ -204,7 +204,7 @@ export const InfoCard = ({ title = "", body = "", icon = "sparkles", frameOverri
   return (
     <div style={{ ...glass, width: "100%", minWidth: 0, padding: compact ? "22px 20px" : "28px 32px", opacity: p, transform: "translateX(" + ((1 - p) * 60) + "px)" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: compact ? 12 : 20, marginBottom: compact ? 16 : 22 }}>
-        <IconBadge icon={icon} size={140} frameOverride={frame} />
+        <IconBadge icon={icon} size={185} frameOverride={frame} />
         <div style={{ ...baseText, maxWidth: titleWidth, fontSize: fitFontSize(title, { width: titleWidth, fontSize: 56, minFontSize: 48 }), fontWeight: 900, color: C.gold }}>{asDisplayText(title)}</div>
       </div>
       <div style={{ ...baseText, ...fit, color: C.muted, margin: "0 auto", fontWeight: 600 }}>{asDisplayText(body)}</div>
@@ -269,7 +269,7 @@ export const SearchBar = ({ query = "راز شگفت‌انگیز بدن انس�
         <Search size={34} color={C.cyan} />
         <span style={{ ...baseText, fontSize: 38, textAlign: "right", flex: 1, color: typed ? C.text : C.muted }}>{typed || asDisplayText(placeholder)}<span style={{ color: C.gold, opacity: frame % 20 < 10 ? 1 : 0 }}>▍</span></span>
       </div>
-      <IconBadge icon="search" size={180} frameOverride={frame} />
+      <IconBadge icon="search" size={185} frameOverride={frame} />
     </div>
   );
 };
