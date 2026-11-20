@@ -1,6 +1,6 @@
 # Project State — Zehn-Khan / ذهن‌خوان
 
-Last updated: 2026-11-20 (hardening task in progress)
+Last updated: 2026-11-20 (hardening code committed; workflow renders pending)
 
 ## Repository, branches and merge gate
 
@@ -10,7 +10,8 @@ Last updated: 2026-11-20 (hardening task in progress)
 - Existing PR #3: [Build Motion Kit V1 and kit-demo composition](https://github.com/hosseinasgari898989-dev/Tolid_mohtava/pull/3), base `main`.
 - The owner explicitly requires review before merge. **Do not merge PR #3 or any follow-up PR without a separate owner confirmation.**
 - `main` and the backup branch must remain unchanged during this task.
-- Previous last-known main SHA (from the 2026-11-18 audit): `ee7dfa8d94c1cfca58c0387c4716ae1af8b7b4ac`. Re-check the live branch before any later release or merge decision.
+- Current verified `main` and rollback backup SHA: `ee7dfa8d94c1cfca58c0387c4716ae1af8b7b4ac`.
+- Hardening feature commit at this update: `e73b6246e338bf3e338ac487ab027f98c3ac6de6`; re-check the branch head after subsequent commits.
 
 ## Architecture and existing behavior
 
@@ -77,7 +78,7 @@ Last updated: 2026-11-20 (hardening task in progress)
 6. Choose one target:
    - `kit-demo`: renders the Motion Kit showcase, synthetic audio bed, a 1.5-second contact sheet and QA report. Assets go to the `kit-demo` Release.
    - `kit-test`: choose `venus-day`, `cleopatra-timeline` or `octopus-hearts`. The full narration/subtitle/CTA/loop video is built and assets accumulate in the `kit-test` Release.
-   - `video`: choose a known production item id in `video_id`. This uses `content_bank.json`, then the production Release path.
+   - `video`: leave `video_id` blank to select the first `pending` item, or enter an exact item id. This uses `content_bank.json` and the production Release path.
 7. Tap **Run workflow** again to confirm.
 8. Open the run and wait until all steps are terminal. Check each QA line and confirm the overall conclusion is green.
 9. Open **Releases** and inspect the matching Release. Check that MP4, contact sheet, caption (where present) and `qa-report.json` are listed.
@@ -103,8 +104,10 @@ Last updated: 2026-11-20 (hardening task in progress)
 
 ## Known issues and verification status
 
-- Full production QA and fact-test rendering must be checked on GitHub Actions after the final code commit.
+- The hardening code is committed on the feature branch, but no manual GitHub Actions dispatch was performed from this task. No green run or fresh MP4/PNG has been verified for this commit.
+- The existing `kit-demo` Release contains assets from an earlier run only (MP4 and contact sheet; no QA report). Do not attribute those files to this hardening commit. The next run must upload a fresh `qa-report.json`.
+- Production `content_bank.json` currently has no verified `pending` items: old pending posts remain `draft` with `fact_source: TO_VERIFY`. Leave `video_id` blank to avoid automatically rerendering the already-done legacy item.
 - `kit-demo` deliberately has no story CTA or story loop; those gates are N/A and displayed as `SKIP`.
 - Legacy items without fact sources are not ready for a new factual production render; keep their statuses as `draft`.
 - Cloudflare setup remains a manual owner action; no secrets were added or deployed by this task.
-- This document must be updated after the render runs with the real run URLs, conclusions, release asset checks and any remaining failures.
+- This document must be updated after the owner runs the requested targets, including real run URLs, QA conclusions, Release asset checks and remaining failures.

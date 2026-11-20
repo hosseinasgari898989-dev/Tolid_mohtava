@@ -33,11 +33,11 @@ Remotion's official Free License covers individuals and teams of up to 3 people,
 
 The GitHub Actions workflow is `workflow_dispatch` only and has three targets:
 
-- `video`: a production-bank item (selected by `video_id`).
+- `video`: a production-bank item. Leave `video_id` blank to select the first item with status `pending`, or enter an exact id to request a specific bank item.
 - `kit-demo`: the Motion Kit showcase with audio, a 1.5-second contact sheet and QA report.
 - `kit-test`: one of the verified items in `content_bank_test.json` (`venus-day`, `cleopatra-timeline`, `octopus-hearts`).
 
-Production and fact-test renders use real Edge TTS word boundaries, the approved outro and loop cover, then run `scripts/qa.mjs`. Their MP4, caption, contact sheet and QA report are stored only in GitHub Releases. The first-video run also uploads `voice-test-farid.mp3` and `voice-test-dilara.mp3`.
+Production and fact-test renders use real Edge TTS word boundaries, the approved outro and loop cover, then run `scripts/qa.mjs`. Their MP4, caption, contact sheet and per-video QA report are stored only in GitHub Releases. The first-video run also uploads `voice-test-farid.mp3` and `voice-test-dilara.mp3`.
 
 The job has a 12-minute limit and the Remotion render itself has a 10-minute guard.
 

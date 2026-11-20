@@ -1,7 +1,7 @@
 import test from "node:test";
 import fs from "node:fs";
 import assert from "node:assert/strict";
-import { validateContentBank } from "./content_bank.mjs";
+import { validateContentBank, isUnverifiedSource } from "./content_bank.mjs";
 
 const makeItem = (overrides = {}) => ({
   id: "sample-001",

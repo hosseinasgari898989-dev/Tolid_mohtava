@@ -13,10 +13,10 @@ on:
           - kit-test
         default: video
       video_id:
-        description: "Production content-bank id (used when target=video)"
+        description: "Optional content-bank id; blank selects the first pending item"
         required: false
         type: string
-        default: "brain-tired-001"
+        default: ""
       test_id:
         description: "Verified fact-test item (used when target=kit-test)"
         required: true
@@ -224,7 +224,7 @@ jobs:
         id: pipeline
         timeout-minutes: 35
         env:
-          VIDEO_ID: ${{ inputs.target == 'kit-test' && inputs.test_id || inputs.video_id || 'brain-tired-001' }}
+          VIDEO_ID: ${{ inputs.target == 'kit-test' && inputs.test_id || inputs.video_id || '' }}
           CONTENT_BANK_PATH: ${{ inputs.target == 'kit-test' && 'content_bank_test.json' || 'content_bank.json' }}
         run: |
           set -Eeuo pipefail
