@@ -98,7 +98,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--video", required=True)
     parser.add_argument("--output", required=True)
-    parser.add_argument("--every-seconds", type=int, default=0, help="Sample every N seconds instead of the standard editorial timestamps.")
+    parser.add_argument("--every-seconds", type=float, default=0, help="Sample every N seconds instead of the standard editorial timestamps.")
+    parser.add_argument("--json-report", default="", help="Optional JSON report with frame and loop comparison measurements.")
     parser.add_argument("--skip-loop-check", action="store_true", help="Skip first/last-frame comparison for non-looping demos.")
     args = parser.parse_args()
 
@@ -110,7 +111,8 @@ def main():
     fps, frame_count, duration = probe_video(video)
     last_frame = frame_count - 1
     if args.every_seconds > 0:
-        sample_seconds = [seconds for seconds in range(0, int(duration), args.every_seconds) if seconds < duration - 0.5]
+        sample_count = int(math.ceil(duration / args.every_seconds))
+        sample_seconds = [round(index * args.every_seconds, 3) for index in range(sample_count) if index * args.every_seconds < duration - 0.5]
     else:
         sample_seconds = SAMPLE_SECONDS + [
             seconds for seconds in ENDING_SAMPLE_SECONDS
@@ -125,7 +127,7 @@ def main():
 
     frame_dir = output.parent / "contact-sheet-frames"
     paths = extract_frames(video, frame_indices, fps, frame_dir)
-    labels = [str(seconds) + "s" for seconds in sample_seconds] + ["Last frame"]
+    labels = [("{:.1f}".format(seconds).rstrip("0").rstrip(".") + "s") for seconds in sample_seconds] + ["Last frame"]
     make_contact_sheet(paths, labels, output)
     print("Created contact sheet: " + str(output))
 
@@ -138,7 +140,22 @@ def main():
     print("First/last frame comparison: MAE={:.3f}, pixels with channel delta >24={:.3f}%.".format(
         mean_absolute_error, changed_pixel_percent
     ))
-    if not args.skip_loop_check and (mean_absolute_error > 5.0 or changed_pixel_percent > 2.0):
+    loop_match = mean_absolute_error <= 5.0 and changed_pixel_percent <= 2.0
+    if args.json_report:
+        report_path = Path(args.json_report)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(json.dumps({
+            "video": str(video),
+            "duration_seconds": duration,
+            "fps": fps,
+            "sample_seconds": sample_seconds,
+            "mean_absolute_error": mean_absolute_error,
+            "changed_pixel_percent": changed_pixel_percent,
+            "loop_match": loop_match,
+            "loop_check_skipped": bool(args.skip_loop_check)
+        }, ensure_ascii=False, indent=2), encoding="utf-8")
+        print("Wrote contact-sheet QA report: " + str(report_path))
+    if not args.skip_loop_check and not loop_match:
         raise RuntimeError(
             "The final frame does not visually match the first cover frame closely enough."
         )

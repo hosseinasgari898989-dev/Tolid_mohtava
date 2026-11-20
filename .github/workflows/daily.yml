@@ -4,34 +4,44 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: "Choose the output to build"
+        description: "Choose the output to render"
         required: true
         type: choice
         options:
           - video
           - kit-demo
+          - kit-test
         default: video
       video_id:
-        description: "Video to render (defaults to the first V2 test video)"
+        description: "Production content-bank id (used when target=video)"
         required: false
         type: string
         default: "brain-tired-001"
+      test_id:
+        description: "Verified fact-test item (used when target=kit-test)"
+        required: true
+        type: choice
+        options:
+          - venus-day
+          - cleopatra-timeline
+          - octopus-hearts
+        default: venus-day
 
 permissions:
   contents: write
 
 concurrency:
-  group: daily-video-factory
+  group: daily-video-factory-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   build:
-    name: Build one Persian short video
+    name: Render, inspect and release one selected video
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
 
     steps:
-      - name: Checkout repository
+      - name: Checkout selected branch
         timeout-minutes: 3
         uses: actions/checkout@v4
         with:
@@ -43,11 +53,29 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Cache npm download cache
+        timeout-minutes: 2
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
       - name: Setup Python
         timeout-minutes: 3
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: Cache pip download cache
+        timeout-minutes: 2
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Locate or install FFmpeg and FFprobe
         timeout-minutes: 5
@@ -58,7 +86,7 @@ jobs:
           if command -v ffmpeg >/dev/null 2>&1 && command -v ffprobe >/dev/null 2>&1; then
             echo "System FFmpeg and FFprobe are already available."
           else
-            echo "Trying a bounded apt install without an unnecessary apt-get update..."
+            echo "Trying bounded apt install before refreshing package metadata."
             if ! timeout --signal=TERM --kill-after=5s 75s sudo apt-get \
               -o Acquire::Retries=3 \
               -o Acquire::http::Timeout=30 \
@@ -85,7 +113,7 @@ jobs:
           mkdir -p "$fallback_dir"
 
           if ! command -v ffmpeg >/dev/null 2>&1; then
-            echo "System ffmpeg is unavailable; adding the Remotion FFmpeg fallback."
+            echo "System ffmpeg is unavailable; adding Remotion's bundled FFmpeg fallback."
             cat > "$fallback_dir/ffmpeg" <<'WRAPPER'
           #!/usr/bin/env bash
           set -Eeuo pipefail
@@ -97,7 +125,7 @@ jobs:
           fi
 
           if ! command -v ffprobe >/dev/null 2>&1; then
-            echo "System ffprobe is unavailable; adding the Remotion FFprobe fallback."
+            echo "System ffprobe is unavailable; adding Remotion's bundled FFprobe fallback."
             cat > "$fallback_dir/ffprobe" <<'WRAPPER'
           #!/usr/bin/env bash
           set -Eeuo pipefail
@@ -109,7 +137,7 @@ jobs:
 
           if [[ -x "$fallback_dir/ffmpeg" || -x "$fallback_dir/ffprobe" ]]; then
             echo "$fallback_dir" >> "$GITHUB_PATH"
-            echo "Remotion bundled media binary fallback registered for following steps."
+            echo "Remotion bundled media binary fallback registered."
           else
             echo "System media binaries are available."
           fi
@@ -118,12 +146,19 @@ jobs:
         timeout-minutes: 5
         run: npm install --no-package-lock --no-audit --no-fund
 
-      - name: Run outro timing regression tests
-        timeout-minutes: 1
+      - name: Install Python packages
+        timeout-minutes: 6
+        run: |
+          set -Eeuo pipefail
+          python -m pip install --disable-pip-version-check --upgrade pip
+          python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Run regression, content-bank and QA unit tests
+        timeout-minutes: 2
         run: npm test
 
       - name: Verify FFmpeg and FFprobe capabilities
-        timeout-minutes: 2
+        timeout-minutes: 3
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -131,69 +166,79 @@ jobs:
           ffprobe -hide_banner -version
 
           if [[ "${REMOTION_FFMPEG_FALLBACK:-0}" == "1" ]]; then
-            echo "Checking the required subset of Remotion's bundled FFmpeg features..."
+            echo "Checking Remotion FFmpeg fallback capabilities."
             filters="$(ffmpeg -hide_banner -filters 2>&1)"
             for required_filter in loudnorm amix atrim apad adelay volume asetpts scale; do
               if ! grep -Eq "[[:space:]]${required_filter}[[:space:]]" <<< "$filters"; then
-                echo "Bundled Remotion FFmpeg is missing required filter: ${required_filter}" >&2
+                echo "Remotion FFmpeg fallback is missing required filter: ${required_filter}" >&2
                 exit 1
               fi
             done
 
             encoders="$(ffmpeg -hide_banner -encoders 2>&1)"
-            for required_encoder in libmp3lame png pcm_s16le; do
+            for required_encoder in libmp3lame aac png pcm_s16le libx264; do
               if ! grep -q "$required_encoder" <<< "$encoders"; then
-                echo "Bundled Remotion FFmpeg is missing required encoder: ${required_encoder}" >&2
+                echo "Remotion FFmpeg fallback is missing required encoder: ${required_encoder}" >&2
                 exit 1
               fi
             done
 
             muxers="$(ffmpeg -hide_banner -muxers 2>&1)"
-            for required_muxer in mp3 wav null image2; do
+            for required_muxer in mp3 wav null image2 mp4; do
               if ! grep -Eq "[[:space:]]${required_muxer}[[:space:]]" <<< "$muxers"; then
-                echo "Bundled Remotion FFmpeg is missing required muxer: ${required_muxer}" >&2
+                echo "Remotion FFmpeg fallback is missing required muxer: ${required_muxer}" >&2
                 exit 1
               fi
             done
-
-            echo "Remotion FFmpeg fallback passed filter, encoder and muxer capability checks."
+            echo "Remotion FFmpeg fallback passed the required capability checks."
           fi
 
-      - name: Install Python packages
-        if: inputs.target == 'video'
-        timeout-minutes: 5
-        run: |
-          python -m pip install --disable-pip-version-check --upgrade pip
-          python -m pip install --disable-pip-version-check -r requirements.txt
-
-      - name: Build video
-        if: inputs.target == 'video'
+      - name: Render selected production or fact-test item
+        if: inputs.target == 'video' || inputs.target == 'kit-test'
         id: pipeline
-        timeout-minutes: 15
+        timeout-minutes: 35
         env:
-          VIDEO_ID: ${{ inputs.video_id || 'brain-tired-001' }}
-        run: node scripts/pipeline.mjs
+          VIDEO_ID: ${{ inputs.target == 'kit-test' && inputs.test_id || inputs.video_id || 'brain-tired-001' }}
+          CONTENT_BANK_PATH: ${{ inputs.target == 'kit-test' && 'content_bank_test.json' || 'content_bank.json' }}
+        run: |
+          set -Eeuo pipefail
+          node scripts/pipeline.mjs
 
-      - name: Upload video, caption and contact sheet to GitHub Release
-        if: inputs.target == 'video' && steps.pipeline.outputs.has_video == 'true'
-        timeout-minutes: 3
+      - name: Upload production or fact-test outputs to GitHub Release
+        if: (inputs.target == 'video' || inputs.target == 'kit-test') && steps.pipeline.outputs.has_video == 'true'
+        timeout-minutes: 5
         env:
           GH_TOKEN: ${{ github.token }}
+          TARGET: ${{ inputs.target }}
           VIDEO_ID: ${{ steps.pipeline.outputs.video_id }}
           VIDEO_PATH: ${{ steps.pipeline.outputs.video_path }}
           CAPTION_PATH: ${{ steps.pipeline.outputs.caption_path }}
           CONTACT_SHEET_PATH: ${{ steps.pipeline.outputs.contact_sheet_path }}
+          QA_REPORT_PATH: ${{ steps.pipeline.outputs.qa_report_path }}
+        shell: bash
         run: |
-          set -euo pipefail
-          TAG="video-${VIDEO_ID}"
-          echo "Uploading ${VIDEO_ID}..."
+          set -Eeuo pipefail
+          if [[ "$TARGET" == "kit-test" ]]; then
+            TAG="kit-test"
+            TITLE="ذهن‌خوان - Verified Fact Tests"
+          else
+            TAG="video-${VIDEO_ID}"
+            TITLE="ذهن‌خوان - ${VIDEO_ID}"
+          fi
+
+          for file in "$VIDEO_PATH" "$CAPTION_PATH" "$CONTACT_SHEET_PATH" "$QA_REPORT_PATH"; do
+            if [[ ! -s "$file" ]]; then
+              echo "Required release output is missing or empty: $file" >&2
+              exit 1
+            fi
+          done
 
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$VIDEO_PATH" "$CAPTION_PATH" "$CONTACT_SHEET_PATH" --clobber
+            gh release upload "$TAG" "$VIDEO_PATH" "$CAPTION_PATH" "$CONTACT_SHEET_PATH" "$QA_REPORT_PATH" --clobber
           else
-            gh release create "$TAG" "$VIDEO_PATH" "$CAPTION_PATH" "$CONTACT_SHEET_PATH" \
-              --title "ذهن‌خوان - ${VIDEO_ID}" \
-              --notes "Generated by the Persian video factory."
+            gh release create "$TAG" "$VIDEO_PATH" "$CAPTION_PATH" "$CONTACT_SHEET_PATH" "$QA_REPORT_PATH" \
+              --title "$TITLE" \
+              --notes "Rendered and inspected by the Daily Video Factory. Outputs are stored in this GitHub Release."
           fi
 
       - name: Upload voice comparison samples
@@ -205,73 +250,116 @@ jobs:
           FARID_PATH: ${{ steps.pipeline.outputs.voice_sample_farid_path }}
           DILARA_PATH: ${{ steps.pipeline.outputs.voice_sample_dilara_path }}
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
           TAG="video-${VIDEO_ID}"
           gh release upload "$TAG" "$FARID_PATH" "$DILARA_PATH" --clobber
 
-      - name: Mark video as done
+      - name: Fail the workflow after publishing a failed QA report
+        if: (inputs.target == 'video' || inputs.target == 'kit-test') && steps.pipeline.outputs.qa_passed != 'true'
+        timeout-minutes: 1
+        run: |
+          echo "Production QA gates did not all pass; the QA report was retained in the Release." >&2
+          exit 1
+
+      - name: Mark normal production item as done
         if: inputs.target == 'video' && steps.pipeline.outputs.has_video == 'true'
         timeout-minutes: 2
         env:
           VIDEO_ID: ${{ steps.pipeline.outputs.video_id }}
         run: node scripts/mark-done.mjs
 
-      - name: Commit completed video status
+      - name: Commit production completion status to selected branch
         if: inputs.target == 'video' && steps.pipeline.outputs.has_video == 'true'
         timeout-minutes: 2
+        shell: bash
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
           git config user.name "github-actions[bot]"
-          git config user.email \
-            "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add content_bank.json
-
           if git diff --cached --quiet; then
-            echo "No changes to commit."
+            echo "No production status change to commit."
           else
             git commit -m "Mark generated video as done"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
 
-      - name: No pending video
-        if: inputs.target == 'video' && steps.pipeline.outputs.has_video != 'true'
-        timeout-minutes: 1
-        run: echo "Factory is idle. No pending videos."
-
-      - name: Install Motion Kit contact-sheet dependencies
-        if: inputs.target == 'kit-demo'
-        timeout-minutes: 3
-        run: python -m pip install --disable-pip-version-check numpy pillow
-
       - name: Render kit-demo composition
         if: inputs.target == 'kit-demo'
+        id: demo_render
         timeout-minutes: 12
+        shell: bash
         run: |
           set -Eeuo pipefail
           mkdir -p out
-          npx remotion render src/index.jsx kit-demo out/kit-demo.mp4 --codec=h264 --crf=23 --pixel-format=yuv420p --concurrency=2
+          timeout --signal=TERM --kill-after=10s 10m \
+            npx remotion render src/index.jsx kit-demo out/kit-demo-render.mp4 \
+              --codec=h264 --crf=23 --pixel-format=yuv420p --concurrency=2
+          test -s out/kit-demo-render.mp4
+          python scripts/make_demo_audio.py --duration 27 --output out/kit-demo-audio.wav
+          test -s out/kit-demo-audio.wav
+          timeout --signal=TERM --kill-after=5s 180s \
+            ffmpeg -y -hide_banner -loglevel warning \
+              -i out/kit-demo-render.mp4 -i out/kit-demo-audio.wav \
+              -map 0:v:0 -map 1:a:0 -c:v copy \
+              -af "loudnorm=I=-14:TP=-1.5:LRA=11" \
+              -c:a aac -b:a 192k -shortest out/kit-demo.mp4
           test -s out/kit-demo.mp4
 
-      - name: Create two-second kit-demo contact sheet
+      - name: Create kit-demo 1.5-second contact sheet
         if: inputs.target == 'kit-demo'
         timeout-minutes: 3
+        shell: bash
         run: |
           set -Eeuo pipefail
-          python scripts/contact_sheet.py --video out/kit-demo.mp4 --output out/kit-demo-contact-sheet.png --every-seconds 2 --skip-loop-check
+          timeout --signal=TERM --kill-after=5s 120s \
+            python scripts/contact_sheet.py \
+              --video out/kit-demo.mp4 \
+              --output out/kit-demo-contact-sheet.png \
+              --every-seconds 1.5 --skip-loop-check \
+              --json-report out/contact-sheet-report.json
           test -s out/kit-demo-contact-sheet.png
+          test -s out/contact-sheet-report.json
 
-      - name: Upload kit-demo MP4 and contact sheet to GitHub Release
+      - name: Run kit-demo QA gates
         if: inputs.target == 'kit-demo'
+        id: demo_qa
+        continue-on-error: true
+        timeout-minutes: 4
+        run: |
+          set -Eeuo pipefail
+          node scripts/qa.mjs \
+            --video out/kit-demo.mp4 \
+            --props scripts/kit-demo-qa-props.json \
+            --profile demo \
+            --output out/qa-report.json
+          test -s out/qa-report.json
+
+      - name: Upload kit-demo outputs to GitHub Release
+        if: inputs.target == 'kit-demo' && steps.demo_render.outcome == 'success'
         timeout-minutes: 4
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -Eeuo pipefail
+          for file in out/kit-demo.mp4 out/kit-demo-contact-sheet.png out/qa-report.json; do
+            if [[ ! -s "$file" ]]; then
+              echo "Required kit-demo release output is missing or empty: $file" >&2
+              exit 1
+            fi
+          done
           if gh release view kit-demo >/dev/null 2>&1; then
-            gh release upload kit-demo out/kit-demo.mp4 out/kit-demo-contact-sheet.png --clobber
+            gh release upload kit-demo out/kit-demo.mp4 out/kit-demo-contact-sheet.png out/qa-report.json --clobber
           else
-            gh release create kit-demo out/kit-demo.mp4 out/kit-demo-contact-sheet.png \
+            gh release create kit-demo out/kit-demo.mp4 out/kit-demo-contact-sheet.png out/qa-report.json \
               --title "ذهن‌خوان - Motion Kit V1 Demo" \
-              --notes "Original Motion Kit components rendered by GitHub Actions."
+              --notes "Motion Kit component showcase. The demo has audio and its own technical QA report; story-video CTA and loop checks are not applicable to this composition."
           fi
+
+      - name: Fail the workflow after publishing a failed kit-demo QA report
+        if: inputs.target == 'kit-demo' && steps.demo_qa.outcome != 'success'
+        timeout-minutes: 1
+        run: |
+          echo "kit-demo QA gates failed; the QA report was retained in the Release." >&2
+          exit 1

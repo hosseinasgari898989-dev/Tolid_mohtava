@@ -17,7 +17,7 @@ A free Persian short-video factory built with Remotion and GitHub Actions.
 
 ## Motion Kit V1
 
-The reusable Remotion component library is in `src/kit/` and brand tokens are in `design/tokens.js`. Every content scene can declare a `layout` and its `data` object: `headline`, `bignumber`, `chart`, `timeline`, `comparison`, `card`, or `list`. The `kit-demo` composition demonstrates all components and transitions; the MP4 and two-second contact sheet will be published only to the `kit-demo` GitHub Release after its workflow succeeds.
+The reusable Remotion component library is in `src/kit/` and brand tokens are in `design/tokens.js`. Every content scene can declare a `layout` and its `data` object: `headline`, `bignumber`, `chart`, `timeline`, `comparison`, `card`, or `list`. The `kit-demo` composition demonstrates all components and transitions. Its render receives a local synthetic audio bed; the MP4, 1.5-second contact sheet and `qa-report.json` are published only to the `kit-demo` GitHub Release. The demo QA profile skips story-video CTA and loop checks, which do not apply to this showcase.
 
 ## No API keys or paid services
 
@@ -31,18 +31,23 @@ Remotion's official Free License covers individuals and teams of up to 3 people,
 
 ## Workflow
 
-The GitHub Actions workflow is `workflow_dispatch` only. It renders one selected video.
-The manual input defaults to `brain-tired-001`. The workflow uploads the MP4 and caption
-to its existing GitHub Release; the first-video run also uploads
-`voice-test-farid.mp3` and `voice-test-dilara.mp3`.
+The GitHub Actions workflow is `workflow_dispatch` only and has three targets:
+
+- `video`: a production-bank item (selected by `video_id`).
+- `kit-demo`: the Motion Kit showcase with audio, a 1.5-second contact sheet and QA report.
+- `kit-test`: one of the verified items in `content_bank_test.json` (`venus-day`, `cleopatra-timeline`, `octopus-hearts`).
+
+Production and fact-test renders use real Edge TTS word boundaries, the approved outro and loop cover, then run `scripts/qa.mjs`. Their MP4, caption, contact sheet and QA report are stored only in GitHub Releases. The first-video run also uploads `voice-test-farid.mp3` and `voice-test-dilara.mp3`.
 
 The job has a 12-minute limit and the Remotion render itself has a 10-minute guard.
 
 ## Content schema
 
-Every scene needs `text_on_screen` and `narration`. The ordered scene narration segments
-must cover the voiceover exactly. Optional scene fields are `highlight`, `visual`,
-`icon` and `transition`.
+Content Bank V2 requires `id`, `status`, `topic`, `layout`, `data`, `voiceover`,
+`scenes`, `caption`, up to five `hashtags` and a non-empty `fact_source`.
+Each scene needs `narration`, `text_on_screen`, `highlight`, `icon`, `layout`
+and `data`. The ordered scene narration segments must cover the voiceover exactly.
+Legacy fields remain readable; items with `fact_source: "TO_VERIFY"` stay in `draft`.
 
 - On-screen text: maximum seven words per scene.
 - Visuals: `neural`, `particles`, `waves`, `geometry`.

@@ -87,15 +87,19 @@
       "#ذهن_خوان",
       "#خستگی_ذهنی",
       "#تمرکز",
-      "#Psychology",
-      "#Mindset",
-      "#BrainFacts",
-      "#SelfAwareness"
-    ]
+      "#Psychology"
+    ],
+    "topic": "body",
+    "layout": "headline",
+    "data": {
+      "text": "ذهنت خسته‌ست، نه تنبل!",
+      "accentWord": "تنبل"
+    },
+    "fact_source": "TO_VERIFY"
   },
   {
     "id": "zeigarnik-001",
-    "status": "pending",
+    "status": "draft",
     "template": "question",
     "title": "چرا کارهای نیمه‌تمام توی ذهنمون می‌مونن؟",
     "voiceover": "چرا کاری که نصفه رها کردی، مدام توی ذهنت برمی‌گرده؟ به این اتفاق اثر زیگارنیک می‌گن. گاهی ذهن، کارهای ناتمام رو راحت‌تر از کارهای کامل به یاد میاره. برای همین ممکنه وسط استراحت هم بهشون فکر کنی. یه راه ساده اینه: قبل از توقف، قدم بعدی رو یادداشت کن. این‌طوری برگشتن به کار روشن‌تر می‌شه. فالو کن برای فردا.",
@@ -182,15 +186,19 @@
       "#روانشناسی",
       "#حافظه",
       "#ذهن",
-      "#ZeigarnikEffect",
-      "#PsychologyFacts",
-      "#Productivity",
-      "#BrainFacts"
-    ]
+      "#ZeigarnikEffect"
+    ],
+    "topic": "body",
+    "layout": "headline",
+    "data": {
+      "text": "کار نیمه‌تمام",
+      "accentWord": "نیمه‌تمام"
+    },
+    "fact_source": "TO_VERIFY"
   },
   {
     "id": "two-minute-001",
-    "status": "pending",
+    "status": "draft",
     "template": "facts",
     "title": "قانون دو دقیقه برای شروع هر کاری",
     "voiceover": "برای شروع یک کار، لازم نیست از همون اول کلی انرژی بذاری. قانون دو دقیقه رو امتحان کن، فقط دو دقیقه شروعش کن. می‌خوای درس بخونی؟ کتاب رو باز کن و یک پاراگراف بخون. می‌خوای مرتب‌کاری کنی؟ فقط یک قسمت کوچیک رو جمع کن. هدف، تموم کردن کار نیست؛ فقط شکستن سختی شروعه. بعدش خودت تصمیم بگیر ادامه بدی یا نه. فالو کن برای فردا.",
@@ -277,10 +285,14 @@
       "#عادت_سازی",
       "#بهره_وری",
       "#شروع_کن",
-      "#TwoMinuteRule",
-      "#ProductivityTips",
-      "#DailyHabits",
-      "#Mindset"
-    ]
+      "#TwoMinuteRule"
+    ],
+    "topic": "body",
+    "layout": "headline",
+    "data": {
+      "text": "شروع انرژی‌بر",
+      "accentWord": "انرژی‌بر"
+    },
+    "fact_source": "TO_VERIFY"
   }
 ]

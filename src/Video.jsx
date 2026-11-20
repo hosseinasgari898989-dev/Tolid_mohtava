@@ -20,6 +20,7 @@ import "@fontsource/vazirmatn/900.css";
 
 import { VisualBackground } from "./backgrounds/NeonBackgrounds";
 import { LayoutRenderer } from "./kit/components.jsx";
+import { fitFontSize, KEY_CONTENT_AREA } from "./kit/layout-utils.js";
 import {
   OUTRO_FRAMES,
   COVER_FADE_START_FRAME,
@@ -122,6 +123,23 @@ const SceneIcon = ({ name, frameOverride }) => {
         </>
       );
       break;
+    case "globe":
+      artwork = (
+        <>
+          <circle cx="50" cy="50" r="37" />
+          <path d="M13 50 H87 M50 13 C31 34 31 66 50 87 M50 13 C69 34 69 66 50 87 M20 30 H80 M20 70 H80" />
+          <path d="M16 42 C34 35 66 35 84 42 M16 58 C34 65 66 65 84 58" />
+        </>
+      );
+      break;
+    case "sparkles":
+      artwork = (
+        <>
+          <path d="M50 8 L59 39 L90 50 L59 61 L50 92 L41 61 L10 50 L41 39 Z" />
+          <path d="M83 12 L87 25 L100 29 L87 33 L83 46 L79 33 L66 29 L79 25 Z M19 68 L23 81 L36 85 L23 89 L19 102 L15 89 L2 85 L15 81 Z" />
+        </>
+      );
+      break;
     default:
       return null;
   }
@@ -152,7 +170,8 @@ const KineticText = ({ scene, isHook, frameOverride }) => {
   const frame = frameOverride ?? currentFrame;
   const { fps } = useVideoConfig();
   const words = scene.textOnScreen.trim().split(/\s+/u);
-  const fontSize = isHook ? 130 : 120;
+  const baseFontSize = isHook ? 120 : 108;
+  const fontSize = fitFontSize(scene.textOnScreen, { width: 936, fontSize: baseFontSize, minFontSize: 90, maxLines: 3 });
   const highlight = normalizeWord(scene.highlight || "");
 
   return (
@@ -239,6 +258,14 @@ const SceneLayer = ({ scene, index, videoId, frameOverride }) => {
     };
   }
 
+  // Force an exact identity transform after the entrance settles.
+  if (frame >= 24) {
+    transitionStyle = {
+      transform: "translate(0px, 0px) scale(1)",
+      filter: "none"
+    };
+  }
+
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
       <div
@@ -268,7 +295,7 @@ const SceneLayer = ({ scene, index, videoId, frameOverride }) => {
         <div
           style={{
             position: "absolute",
-            top: "17%",
+            top: "13%",
             left: 0,
             right: 0,
             display: "flex",
@@ -281,11 +308,11 @@ const SceneLayer = ({ scene, index, videoId, frameOverride }) => {
         <div
           style={{
             position: "absolute",
-            top: "33%",
+            top: `${KEY_CONTENT_AREA.top}%`,
             left: 72,
             right: 72,
-            height: "25%",
-            minHeight: 280,
+            height: `${KEY_CONTENT_AREA.height}%`,
+            minHeight: 400,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",

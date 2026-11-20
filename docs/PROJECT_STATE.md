@@ -1,67 +1,110 @@
 # Project State — Zehn-Khan / ذهن‌خوان
 
-Last verified: 2026-11-18
+Last updated: 2026-11-20 (hardening task in progress)
 
-## Repository and current main
+## Repository, branches and merge gate
 
-- Repository: `hosseinasgari898989-dev/Tolid_mohtava` (public; keep public).
-- Current `main` at last verification: `ee7dfa8d94c1cfca58c0387c4716ae1af8b7b4ac`, containing both approved PR merges, `docs/PROJECT_STATE.md`, and removal of the failure-only media Artifact upload. The new target selector exists only on the feature branch.
-- PR #1, “Upgrade Remotion video factory to V2”: merged at `19226216d6c8956a013d6e23c3245bda479776f0`.
-- PR #2, “Fix V3 closing CTA timing and seamless outro”: merged at `a5a6157a31dcee8529c868242537d1560d523bd1`.
-- The two requested backups remain present: `backup/pre-motion-graphics-v2-2026-11-17` and `backup/pre-v3-regression-2026-11-18`. Do not delete them.
-- Other retained branches at last check: `backup/pre-remotion-syntax-fix-2026-11-17`, `backup/pre-v3-polish-2026-11-18`, `feature/motion-graphics-v2-2026-11-17`, `feature/v3-polish-2026-11-18`, and `fix/v3-regression-2026-11-18`.
+- Repository: `hosseinasgari898989-dev/Tolid_mohtava` (public).
+- Feature branch for this task: `feature/motion-kit-v1-2026-11-18`.
+- Required rollback snapshot: `backup/pre-motion-kit-v1-2026-11-18`. Keep this branch.
+- Existing PR #3: [Build Motion Kit V1 and kit-demo composition](https://github.com/hosseinasgari898989-dev/Tolid_mohtava/pull/3), base `main`.
+- The owner explicitly requires review before merge. **Do not merge PR #3 or any follow-up PR without a separate owner confirmation.**
+- `main` and the backup branch must remain unchanged during this task.
+- Previous last-known main SHA (from the 2026-11-18 audit): `ee7dfa8d94c1cfca58c0387c4716ae1af8b7b4ac`. Re-check the live branch before any later release or merge decision.
 
-## What exists
+## Architecture and existing behavior
 
-- GitHub Actions workflow: `.github/workflows/daily.yml`, named **Daily Video Factory**.
-- Trigger is `workflow_dispatch` only. It checks out the selected ref and renders one selected video ID.
-- Pipeline: `scripts/pipeline.mjs`; Persian Edge TTS with actual word-boundary timings: `scripts/tts.py`; voice/music/SFX mixing and loudness processing: `scripts/mix_audio.py`; completion status: `scripts/mark-done.mjs`.
-- Video: Remotion, React, 1080×1920, 30fps, Vazirmatn, animated hook/headlines, word-synced subtitles, SVG backgrounds, scene transitions and a loop-friendly outro.
-- V3 outro regression helpers/tests: `src/outroTiming.js`, `scripts/outro_timing.test.mjs`.
-- Content inventory: `content_bank.json`. Last checked: `brain-tired-001` done; `zeigarnik-001` and `two-minute-001` pending.
-- Main stack uses Remotion `4.0.544`, React `19.3.1`, Node `22`, Python `3.11`.
+- Rendering: Remotion `4.0.544`, React `19.3.1`, Node.js `22`, Python `3.11`.
+- Frame: 1080×1920, 30 fps, H.264, vertical short-video format.
+- Pipeline: `scripts/pipeline.mjs`.
+- Persian Edge TTS and word-boundary timings: `scripts/tts.py`.
+- Voice/music/SFX mixing and two-pass loudness normalization: `scripts/mix_audio.py`.
+- Rendered scenes and production outro: `src/Video.jsx`, `src/outroTiming.js`.
+- Reusable Motion Kit: `src/kit/components.jsx`, `src/kit/backgrounds.jsx`, `src/kit/layout-utils.js`, `src/kit/transitions.jsx`.
+- Demo composition: `src/kit/DemoComposition.jsx`, composition id `kit-demo`.
+- Main workflow entry point: `.github/workflows/daily.yml`; keep it `workflow_dispatch` only.
+- Contact-sheet generation and loop MAE check: `scripts/contact_sheet.py`.
+- Quality gates: `scripts/qa.mjs`; tests: `scripts/qa.test.mjs` and the existing Node test files.
+- Content schema and validation: `scripts/content_bank.mjs`, `scripts/content_bank.test.mjs`.
 
-## Output and workflow rules
+## Approved production behavior — preserve
 
-- Generated MP4, caption and contact sheet belong only in GitHub Releases. Never commit generated media or publish these media outputs as GitHub Actions Artifacts.
-- Do not add generated media to the repository.
-- Workflow remains manual (`workflow_dispatch`) until the Cloudflare scheduler is deliberately configured and approved.
-- Never log, expose or commit secrets.
-- Keep Pexels removed; no paid services.
-- No publishing to Instagram, TikTok or YouTube is performed by this factory workflow.
-- Keep the current opening hook, word-by-word subtitle timing, voice mastering/loudness chain, closing CTA and first/last-frame loop test intact.
+- Hook headline starts on frame 0.
+- Word-by-word subtitles remain aligned to real Edge TTS word boundaries; the active word is gold and the layout remains RTL.
+- Closing CTA is exactly `فالو کن برای فردا` and has at least 1.2 seconds of full visibility.
+- No dark empty frame at the end.
+- Final frame must match first frame using the existing contact-sheet MAE / changed-pixel gate.
+- Audio uses the existing voice/music/SFX pipeline and is checked around -14 LUFS with true peak no higher than -1.5 dBTP.
+- Production output must be 1080×1920, 30 fps, H.264, and under 59 seconds.
+- Do not introduce paid providers or paid media services.
 
-## Verified runs and releases
+## Content Bank
 
-- PR #2 branch run #10: [Daily Video Factory run](https://github.com/hosseinasgari898989-dev/Tolid_mohtava/actions/runs/44274959959). It completed green on `fix/v3-regression-2026-11-18`, SHA `d1ae97818125b490da20624e2a48ce50ea1c8f6c`.
-- Run #10 tests: 4 passed, 0 failed. Render: 748 frames, 24.94s. Contact sheet includes 22s, 23s, 24s and last-frame samples. First/last comparison: MAE 0.837; pixels with channel delta >24: 0.006%.
-- Release: [video-brain-tired-001](https://github.com/hosseinasgari898989-dev/Tolid_mohtava/releases/tag/video-brain-tired-001). It contains MP4, caption, contact sheet and voice comparison samples.
-- Run #10 is a branch verification, not a verification run on post-merge `main`.
+- `content_bank.json` remains backward compatible with the previous items, but now has V2 topic/layout/data/source metadata.
+- Old content without a verified `fact_source` is marked `TO_VERIFY`. Pending legacy entries are changed to `draft`; do not promote them to pending until their claims and sources are checked.
+- Hashtags are limited to five.
+- The three fact-test entries live in `content_bank_test.json` and are separate from the production bank:
+  - `venus-day` — comparison; NASA Venus facts: https://science.nasa.gov/venus/venus-facts/
+  - `cleopatra-timeline` — timeline; Egypt Ministry of Tourism and Antiquities dates Khufu to c. 2589–2566 BCE; the University of Michigan Kelsey Museum chronology records Cleopatra's death in 30 BCE; NASA records Apollo 11's landing on 20 July 1969: https://egymonuments.gov.eg/monuments/the-great-pyramid/ ; https://prod.lsa.umich.edu/content/dam/kelsey-assets/kelsey-documents/education/teacher-resource-guides/EDU_curriculum_AEgypt_webready.pdf ; https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo11info.html
+  - `octopus-hearts` — card/orbit; Smithsonian Ocean: https://ocean.si.edu/ocean-life/invertebrates/octopuses-squids-and-relatives
+- Those three test sources were checked for the stated claims. Legacy `TO_VERIFY` entries remain unverified.
 
-## Pending
+## Release and output policy
 
-1. Owner to run **Daily Video Factory** on `main` from the GitHub phone UI and verify the post-merge main MP4/contact sheet.
-2. Inspect the resulting main-branch MP4 and contact sheet, including frame-0 hook, word-by-word subtitles, at least 1.2s CTA visibility, no dark gap and last-frame/first-frame match.
-3. Motion Kit V1 and `kit-demo` are being developed on `feature/motion-kit-v1-2026-11-18`; rollback snapshot: `backup/pre-motion-kit-v1-2026-11-18`. Do not merge it until the owner confirms.
+- MP4, contact sheets, captions and `qa-report.json` are stored only in GitHub Releases.
+- Do not upload these outputs as GitHub Actions Artifacts.
+- Do not commit generated MP4, PNG, WAV or other rendered media.
+- Production releases use `video-<id>`.
+- Demo release tag: `kit-demo`.
+- Fact-test release tag: `kit-test`, containing each selected test item's MP4, caption, contact sheet and QA report.
+- No publishing to any social account is performed by this repository workflow.
 
-## Motion Kit V1 branch
+## QA behavior
 
-- Feature branch: `feature/motion-kit-v1-2026-11-18`.
-- Pre-change backup: `backup/pre-motion-kit-v1-2026-11-18`.
-- PR #3 is open: [Build Motion Kit V1 and kit-demo composition](https://github.com/hosseinasgari898989-dev/Tolid_mohtava/pull/3); base is `main` at `ee7dfa8d94c1cfca58c0387c4716ae1af8b7b4ac`.
-- Implemented on this branch: brand tokens, RTL/Persian-digit/layout helpers, reusable animated components, animated background pack, slide/wipe/zoom transitions, `kit-demo` composition and layout/data integration. The existing `.github/workflows/daily.yml` is the sole manual entry point and now offers a `target` choice: `video` or `kit-demo` (default `video`).
-- `target=video` keeps the prior video pipeline and release path. `target=kit-demo` renders the composition, creates a contact sheet every two seconds and uploads only `kit-demo.mp4` plus `kit-demo-contact-sheet.png` to the Release tagged `kit-demo`. The standalone `kit-demo.yml` workflow has been removed to avoid a duplicate entry point.
-- The demo explicitly skips loop comparison because it is not a looping video; normal video rendering keeps its first/last-frame loop check.
-- No workflow was dispatched during this change. The owner will run the updated **Daily Video Factory** from a phone; `main` remains unchanged.
-- Keep this branch unmerged until owner approval.
+- `scripts/qa.mjs` samples frames every 1.5 seconds and checks navy background, corners and edge strips, nonblank first frame, dimensions, fps, codec, duration, audio, loudness and true peak.
+- Production profile additionally checks closing-line visibility, loop comparison, word timing, content-bank validity and text fit.
+- `kit-demo` is a showcase rather than a story video. Its QA report explicitly marks story-video CTA and first/last loop gates as `SKIP`; it still checks frame appearance, safe-area/layout fit, audio and loudness. Do not describe these skipped demo-only checks as passed.
+- A failed QA report is retained in the relevant Release before the Workflow is made to fail. A successful Release upload does not mean the QA gate passed.
+- Every render path must run QA after rendering. Check the QA report and the output assets, not only the workflow summary.
 
-## Licensing note
+## Workflow usage from an Android phone
 
-- Remotion's official Free License covers individuals and teams of up to 3 people, including automated rendering and commercial video creation. Larger for-profit organizations may need a paid Company License; re-check eligibility if the project team or operating entity changes.
-- No paid stock provider or paid external rendering service was added by Motion Kit V1.
+1. Open this repository in GitHub mobile or Chrome.
+2. Tap **Actions**.
+3. Choose **Daily Video Factory**.
+4. Tap **Run workflow**.
+5. Set the branch to `feature/motion-kit-v1-2026-11-18` while the PR is still unmerged.
+6. Choose one target:
+   - `kit-demo`: renders the Motion Kit showcase, synthetic audio bed, a 1.5-second contact sheet and QA report. Assets go to the `kit-demo` Release.
+   - `kit-test`: choose `venus-day`, `cleopatra-timeline` or `octopus-hearts`. The full narration/subtitle/CTA/loop video is built and assets accumulate in the `kit-test` Release.
+   - `video`: choose a known production item id in `video_id`. This uses `content_bank.json`, then the production Release path.
+7. Tap **Run workflow** again to confirm.
+8. Open the run and wait until all steps are terminal. Check each QA line and confirm the overall conclusion is green.
+9. Open **Releases** and inspect the matching Release. Check that MP4, contact sheet, caption (where present) and `qa-report.json` are listed.
+10. Do not merge the PR just because a render or Release upload succeeded. Review the source changes, QA report and MP4/contact sheet first.
 
-## Known issues / cautions
+## Cloudflare Scheduler — not deployed by this task
 
-- The failure-only diagnostic Artifact upload of contact-sheet frames has been removed from `main`; generated MP4s and contact sheets are uploaded only to GitHub Releases.
-- The repository had no `docs/PROJECT_STATE.md` before this file was added.
-- Run #10's video and contact-sheet assets were verified by workflow logs and Release asset metadata. A separate visual inspection of the binary image/video was not available in the prior browser session.
+- Worker source: `scheduler.js`.
+- Required Cloudflare Secrets: `GITHUB_PAT` and `MANUAL_TRIGGER_KEY`.
+- Fine-grained PAT must be limited to this Repository, with **Actions: Read and write**. The dispatch endpoint requires Actions write; no Contents permission is needed for the scheduler. The Worker caps each attempt at 8 seconds and the three-attempt exponential-backoff path at approximately 27 seconds worst case.
+- The Worker dispatch body targets `main`; this is the intended automated production branch after the owner approves and merges the feature PR.
+- Cron Triggers use UTC.
+- No Cloudflare Worker code or Cron Trigger was deployed in this task.
+- Phone setup guide: `docs/CLOUDFLARE_SETUP.md`.
+- Never paste Secrets into chat, commits, Issues or logs.
+
+## Rollback
+
+- If PR #3 is still open and has not been merged: close the PR. `main` is unaffected; leave the feature and backup branches for audit.
+- If this work is merged later and a rollback is needed: open the merged PR, use GitHub's **Revert** action, review the generated revert PR and merge that only after owner approval.
+- Never force-push `main`, reset `main` to the backup branch, or delete `backup/pre-motion-kit-v1-2026-11-18`.
+- The backup branch is a preserved pre-task snapshot for comparison and recovery reference.
+
+## Known issues and verification status
+
+- Full production QA and fact-test rendering must be checked on GitHub Actions after the final code commit.
+- `kit-demo` deliberately has no story CTA or story loop; those gates are N/A and displayed as `SKIP`.
+- Legacy items without fact sources are not ready for a new factual production render; keep their statuses as `draft`.
+- Cloudflare setup remains a manual owner action; no secrets were added or deployed by this task.
+- This document must be updated after the render runs with the real run URLs, conclusions, release asset checks and any remaining failures.

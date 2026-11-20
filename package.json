@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "render": "remotion render src/index.jsx Video",
-    "test": "node --test scripts/outro_timing.test.mjs scripts/kit.test.mjs"
+    "test": "node --test scripts/outro_timing.test.mjs scripts/kit.test.mjs scripts/content_bank.test.mjs scripts/qa.test.mjs"
   },
   "dependencies": {
     "@fontsource/vazirmatn": "5.3.0",

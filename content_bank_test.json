@@ -1,0 +1,239 @@
+[
+  {
+    "id": "venus-day",
+    "status": "pending",
+    "topic": "space",
+    "layout": "comparison",
+    "data": {
+      "title": "زهره: روز در برابر سال",
+      "a": {
+        "label": "یک روز",
+        "value": 100,
+        "detail": "۲۴۳ روز زمینی"
+      },
+      "b": {
+        "label": "یک سال",
+        "value": 93,
+        "detail": "۲۲۵ روز زمینی"
+      }
+    },
+    "title": "یک روز روی زهره از سالش بلندتر است",
+    "voiceover": "یک روز روی زهره از یک سالش طولانی‌تره. چرخش زهره به دور محورش حدود دویست و چهل و سه روز زمینی طول می‌کشه، اما یک دور کامل دور خورشید فقط دویست و بیست و پنج روزه. یعنی یک روز زهره از یک سالش بلندتره. فالو کن برای فردا.",
+    "tts_provider": "edge",
+    "voice": "fa-IR-DilaraNeural",
+    "rate": "+6%",
+    "pitch": "+0Hz",
+    "scenes": [
+      {
+        "narration": "یک روز روی زهره از یک سالش طولانی‌تره.",
+        "text_on_screen": "یک روز، بلندتر از سال",
+        "highlight": "بلندتر",
+        "icon": "globe",
+        "layout": "headline",
+        "data": {
+          "text": "یک روز، بلندتر از سال",
+          "accentWord": "بلندتر"
+        }
+      },
+      {
+        "narration": "چرخش زهره به دور محورش حدود دویست و چهل و سه روز زمینی طول می‌کشه، اما یک دور کامل دور خورشید فقط دویست و بیست و پنج روزه.",
+        "text_on_screen": "روز در برابر سال",
+        "highlight": "روز",
+        "icon": "clock",
+        "layout": "comparison",
+        "data": {
+          "title": "زهره: روز در برابر سال",
+          "a": {
+            "label": "یک روز",
+            "value": 100,
+            "detail": "۲۴۳ روز زمینی"
+          },
+          "b": {
+            "label": "یک سال",
+            "value": 93,
+            "detail": "۲۲۵ روز زمینی"
+          }
+        }
+      },
+      {
+        "narration": "یعنی یک روز زهره از یک سالش بلندتره. فالو کن برای فردا.",
+        "text_on_screen": "روز زهره، طولانی‌تر",
+        "highlight": "طولانی‌تر",
+        "icon": "sparkles",
+        "layout": "headline",
+        "data": {
+          "text": "روز زهره، طولانی‌تر",
+          "accentWord": "طولانی‌تر"
+        }
+      }
+    ],
+    "caption": "روی زهره، یک چرخش کامل به دور محور از یک گردش به دور خورشید طولانی‌تر است.",
+    "hashtags": [
+      "#فضا",
+      "#زهره",
+      "#نجوم",
+      "#حقایق_علمی",
+      "#Space"
+    ],
+    "fact_source": "https://science.nasa.gov/venus/venus-facts/"
+  },
+  {
+    "id": "cleopatra-timeline",
+    "status": "pending",
+    "topic": "history",
+    "layout": "timeline",
+    "data": {
+      "title": "سه تاریخ برای مقایسه",
+      "events": [
+        {
+          "when": "حدود ۲۶۰۰ پیش از میلاد",
+          "title": "ساخت هرم بزرگ جیزه"
+        },
+        {
+          "when": "۳۰ پیش از میلاد",
+          "title": "درگذشت کلئوپاترا"
+        },
+        {
+          "when": "۲۰ ژوئیه ۱۹۶۹",
+          "title": "فرود آپولو ۱۱ روی ماه"
+        }
+      ]
+    },
+    "title": "کلئوپاترا به فرود ماه نزدیک‌تر از ساخت هرم بزرگ زندگی می‌کرد",
+    "voiceover": "کلئوپاترا به فرود انسان روی ماه نزدیک‌تر بود تا به ساخت هرم بزرگ جیزه. او در سی پیش از میلاد درگذشت؛ هرم بزرگ جیزه حدود دو هزار و ششصد پیش از میلاد ساخته شده بود؛ آپولو یازده در بیستم ژوئیه هزار و نهصد و شصت و نه روی ماه فرود آمد. پس فاصله زمانی او تا فرود ماه کمتر بود. فالو کن برای فردا.",
+    "tts_provider": "edge",
+    "voice": "fa-IR-DilaraNeural",
+    "rate": "+6%",
+    "pitch": "+0Hz",
+    "scenes": [
+      {
+        "narration": "کلئوپاترا به فرود انسان روی ماه نزدیک‌تر بود تا به ساخت هرم بزرگ جیزه.",
+        "text_on_screen": "کلئوپاترا و زمان",
+        "highlight": "زمان",
+        "icon": "clock",
+        "layout": "headline",
+        "data": {
+          "text": "کلئوپاترا و زمان",
+          "accentWord": "زمان"
+        }
+      },
+      {
+        "narration": "او در سی پیش از میلاد درگذشت؛ هرم بزرگ جیزه حدود دو هزار و ششصد پیش از میلاد ساخته شده بود؛ آپولو یازده در بیستم ژوئیه هزار و نهصد و شصت و نه روی ماه فرود آمد.",
+        "text_on_screen": "سه نقطه در زمان",
+        "highlight": "زمان",
+        "icon": "clock",
+        "layout": "timeline",
+        "data": {
+          "title": "سه تاریخ برای مقایسه",
+          "events": [
+            {
+              "when": "۲۵۸۹ تا ۲۵۶۶ پیش از میلاد",
+              "title": "ساخت هرم بزرگ جیزه"
+            },
+            {
+              "when": "۳۰ پیش از میلاد",
+              "title": "درگذشت کلئوپاترا"
+            },
+            {
+              "when": "۲۰ ژوئیه ۱۹۶۹",
+              "title": "فرود آپولو ۱۱ روی ماه"
+            }
+          ]
+        }
+      },
+      {
+        "narration": "پس فاصله زمانی او تا فرود ماه کمتر بود. فالو کن برای فردا.",
+        "text_on_screen": "ماه، نزدیک‌تر از هرم",
+        "highlight": "نزدیک‌تر",
+        "icon": "sparkles",
+        "layout": "headline",
+        "data": {
+          "text": "ماه، نزدیک‌تر از هرم",
+          "accentWord": "نزدیک‌تر"
+        }
+      }
+    ],
+    "caption": "کلئوپاترا در ۳۰ پیش از میلاد درگذشت؛ فاصله‌اش تا فرود آپولو ۱۱ از فاصله‌اش تا ساخت هرم بزرگ کمتر بود.",
+    "hashtags": [
+      "#تاریخ",
+      "#کلئوپاترا",
+      "#مصر_باستان",
+      "#آپولو۱۱",
+      "#History"
+    ],
+    "fact_source": [
+      "https://egymonuments.gov.eg/monuments/the-great-pyramid/",
+      "https://prod.lsa.umich.edu/content/dam/kelsey-assets/kelsey-documents/education/teacher-resource-guides/EDU_curriculum_AEgypt_webready.pdf",
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo11info.html"
+    ]
+  },
+  {
+    "id": "octopus-hearts",
+    "status": "pending",
+    "topic": "animals",
+    "layout": "card",
+    "data": {
+      "title": "دو قلب آبششی",
+      "body": "خون را به آبشش‌ها می‌فرستند تا اکسیژن بگیرد.",
+      "icon": "heart",
+      "orbit": true,
+      "orbitLabel": "مسیر خون به آبشش‌ها"
+    },
+    "title": "اختاپوس سه قلب دارد",
+    "voiceover": "اختاپوس سه قلب داره. دو قلب خون رو به آبشش‌ها می‌فرستن تا اکسیژن بگیره. قلب سوم خون اکسیژن‌دار رو به سراسر بدن می‌رسونه. فالو کن برای فردا.",
+    "tts_provider": "edge",
+    "voice": "fa-IR-DilaraNeural",
+    "rate": "+6%",
+    "pitch": "+0Hz",
+    "scenes": [
+      {
+        "narration": "اختاپوس سه قلب داره.",
+        "text_on_screen": "اختاپوس سه قلب دارد",
+        "highlight": "سه",
+        "icon": "heart",
+        "layout": "headline",
+        "data": {
+          "text": "اختاپوس سه قلب دارد",
+          "accentWord": "سه"
+        }
+      },
+      {
+        "narration": "دو قلب خون رو به آبشش‌ها می‌فرستن تا اکسیژن بگیره.",
+        "text_on_screen": "دو قلب، سمت آبشش‌ها",
+        "highlight": "دو",
+        "icon": "heart",
+        "layout": "card",
+        "data": {
+          "title": "دو قلب آبششی",
+          "body": "خون را به آبشش‌ها می‌فرستند تا اکسیژن بگیرد.",
+          "icon": "heart",
+          "orbit": true,
+          "orbitLabel": "سه قلب، یک سامانه"
+        }
+      },
+      {
+        "narration": "قلب سوم خون اکسیژن‌دار رو به سراسر بدن می‌رسونه. فالو کن برای فردا.",
+        "text_on_screen": "قلب سوم، به بدن",
+        "highlight": "سوم",
+        "icon": "heart",
+        "layout": "card",
+        "data": {
+          "title": "قلب سوم",
+          "body": "خون اکسیژن‌دار را به سراسر بدن می‌رساند.",
+          "icon": "heart",
+          "orbit": true,
+          "orbitLabel": "سه قلب، یک سامانه"
+        }
+      }
+    ],
+    "caption": "دو قلب به آبشش‌ها خون می‌رسانند و قلب سوم خون اکسیژن‌دار را در بدن پخش می‌کند.",
+    "hashtags": [
+      "#حیوانات",
+      "#اختاپوس",
+      "#اقیانوس",
+      "#زیست_شناسی",
+      "#Animals"
+    ],
+    "fact_source": "https://ocean.si.edu/ocean-life/invertebrates/octopuses-squids-and-relatives"
+  }
+]

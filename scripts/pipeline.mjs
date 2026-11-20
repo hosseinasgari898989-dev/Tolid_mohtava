@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import { execFileSync } from "node:child_process";
+import { validateContentBank } from "./content_bank.mjs";
 
-const BANK_PATH = "content_bank.json";
+const BANK_PATH = process.env.CONTENT_BANK_PATH || "content_bank.json";
 const FIRST_VIDEO_ID = "brain-tired-001";
 const FPS = 30;
 const ICONS = new Set([
@@ -32,118 +33,8 @@ function normalizedTokens(text) {
 }
 
 function validateBank(bank) {
-  const templates = new Set(["facts", "list", "question"]);
-  if (!Array.isArray(bank)) {
-    throw new Error("content_bank.json must contain a JSON array.");
-  }
-
-  const seenIds = new Set();
-  for (const [index, video] of bank.entries()) {
-    const label = `content_bank.json item ${index + 1}`;
-    if (!video || typeof video !== "object" || Array.isArray(video)) {
-      throw new Error(`${label} must be an object.`);
-    }
-    if (typeof video.id !== "string" || !video.id.trim()) {
-      throw new Error(`${label}: id must be a non-empty string.`);
-    }
-    if (seenIds.has(video.id)) {
-      throw new Error(`Duplicate video id: ${video.id}`);
-    }
-    seenIds.add(video.id);
-
-    if (!["pending", "done"].includes(video.status)) {
-      throw new Error(`${label} (${video.id}): status must be pending or done.`);
-    }
-    for (const field of ["title", "voiceover", "caption"]) {
-      if (typeof video[field] !== "string" || !video[field].trim()) {
-        throw new Error(`${label} (${video.id}): ${field} must be non-empty.`);
-      }
-    }
-    if (!templates.has(video.template)) {
-      throw new Error(`${label} (${video.id}): invalid template.`);
-    }
-
-    const ttsProvider = video.tts_provider ?? "edge";
-    const voice = video.voice ?? "fa-IR-DilaraNeural";
-    const rate = video.rate ?? "+6%";
-    const pitch = video.pitch ?? "+0Hz";
-    if (ttsProvider !== "edge") {
-      throw new Error(`${label} (${video.id}): only tts_provider=edge is implemented.`);
-    }
-    if (typeof voice !== "string" || !/^fa-IR-[A-Za-z]+Neural$/.test(voice)) {
-      throw new Error(`${label} (${video.id}): voice must be a Persian Edge Neural voice.`);
-    }
-    if (typeof rate !== "string" || !/^[+-]\d+%$/.test(rate)) {
-      throw new Error(`${label} (${video.id}): rate must use a value such as +6%.`);
-    }
-    if (typeof pitch !== "string" || !/^[+-]\d+Hz$/.test(pitch)) {
-      throw new Error(`${label} (${video.id}): pitch must use a value such as +0Hz.`);
-    }
-
-    if (!Array.isArray(video.scenes) || video.scenes.length === 0) {
-      throw new Error(`${label} (${video.id}): scenes must be a non-empty array.`);
-    }
-
-    let previousVisual = null;
-    const narrationTokens = [];
-    for (const [sceneIndex, scene] of video.scenes.entries()) {
-      const sceneLabel = `${label} (${video.id}) scene ${sceneIndex + 1}`;
-      if (!scene || typeof scene !== "object" ||
-          typeof scene.text_on_screen !== "string" || !scene.text_on_screen.trim()) {
-        throw new Error(`${sceneLabel}: text_on_screen must be non-empty.`);
-      }
-      if (typeof scene.narration !== "string" || !scene.narration.trim()) {
-        throw new Error(`${sceneLabel}: narration must be non-empty.`);
-      }
-
-      const screenWords = scene.text_on_screen.trim().split(/\s+/u);
-      if (screenWords.length < 2 || screenWords.length > 4) {
-        throw new Error(`${sceneLabel}: headline must contain 2–4 words; received ${screenWords.length}.`);
-      }
-
-      if (scene.highlight !== undefined) {
-        if (typeof scene.highlight !== "string" ||
-            !normalizedTokens(scene.text_on_screen).includes(normalizedTokens(scene.highlight)[0])) {
-          throw new Error(`${sceneLabel}: highlight must be a word contained in text_on_screen.`);
-        }
-      }
-      if (scene.visual !== undefined && !VISUALS.has(scene.visual)) {
-        throw new Error(`${sceneLabel}: invalid visual style.`);
-      }
-      if (scene.visual && previousVisual === scene.visual) {
-        throw new Error(`${sceneLabel}: background style must change every scene.`);
-      }
-      if (scene.visual) previousVisual = scene.visual;
-
-      if (scene.icon !== undefined && !ICONS.has(scene.icon)) {
-        throw new Error(`${sceneLabel}: unsupported icon.`);
-      }
-      if (scene.transition !== undefined && !TRANSITIONS.has(scene.transition)) {
-        throw new Error(`${sceneLabel}: transition must be zoom, slide, glitch, or wipe.`);
-      }
-      if (!LAYOUTS.has(scene.layout)) throw new Error(`${sceneLabel}: invalid layout.`);
-      if (!scene.data || typeof scene.data !== "object" || Array.isArray(scene.data)) throw new Error(`${sceneLabel}: data must be an object.`);
-      narrationTokens.push(...normalizedTokens(scene.narration));
-    }
-
-    const voiceTokens = normalizedTokens(video.voiceover);
-    if (narrationTokens.length !== voiceTokens.length ||
-        narrationTokens.some((token, i) => token !== voiceTokens[i])) {
-      throw new Error(
-        `${label} (${video.id}): scene narration must cover the voiceover exactly, in order, with no missing or extra words.`
-      );
-    }
-
-    const validHashtags =
-      (typeof video.hashtags === "string" && video.hashtags.trim()) ||
-      (Array.isArray(video.hashtags) && video.hashtags.length > 0 &&
-        video.hashtags.every(tag => typeof tag === "string" && tag.trim()));
-    if (!validHashtags) {
-      throw new Error(`${label} (${video.id}): hashtags must be a non-empty string or array.`);
-    }
-  }
-
-  console.log(`Validated ${bank.length} videos, 2–4-word headlines, narration coverage, highlights, icons, transitions and TTS configuration.`);
+  const result = validateContentBank(bank, BANK_PATH);
+  console.log("Validated " + result.count + " content items, V2 schema, legacy compatibility, source metadata and layout fields.");
 }
 
 function mapSceneTimings(scenes, words) {
@@ -224,7 +115,7 @@ function mapSceneTimings(scenes, words) {
 }
 
 function runTts(args) {
-  execFileSync("python3", ["scripts/tts.py", ...args], { stdio: "inherit" });
+  execFileSync("python3", ["scripts/tts.py", ...args], { stdio: "inherit", timeout: 11 * 60 * 1000 });
 }
 
 async function main() {
@@ -277,7 +168,7 @@ async function main() {
     "ffprobe",
     ["-v", "error", "-show_entries", "format=duration",
      "-of", "default=noprint_wrappers=1:nokey=1", rawVoicePath],
-    { encoding: "utf8" }
+    { encoding: "utf8", timeout: 30000 }
   ).trim());
 
   if (!Number.isFinite(audioDuration) || audioDuration <= 0) {
@@ -318,7 +209,7 @@ async function main() {
     "--duration", String(finalDuration),
     "--video-id", video.id,
     "--scenes", "out/audio-scenes.json"
-  ], { stdio: "inherit" });
+  ], { stdio: "inherit", timeout: 11 * 60 * 1000 });
 
   const hashtagList = Array.isArray(video.hashtags)
     ? video.hashtags
@@ -372,8 +263,31 @@ async function main() {
   execFileSync("python3", [
     "scripts/contact_sheet.py",
     "--video", videoPath,
-    "--output", contactSheetPath
-  ], { stdio: "inherit" });
+    "--output", contactSheetPath,
+    "--every-seconds", "1.5",
+    "--json-report", "out/contact-sheet-report.json"
+  ], { stdio: "inherit", timeout: 3 * 60 * 1000 });
+
+  const qaReportPath = "out/qa-report.json";
+  console.log("Running production QA gates against the rendered MP4...");
+  let qaPassed = false;
+  try {
+    execFileSync("node", [
+      "scripts/qa.mjs",
+      "--video", videoPath,
+      "--props", propsPath,
+      "--bank", BANK_PATH,
+      "--contact-report", "out/contact-sheet-report.json",
+      "--profile", "production",
+      "--output", qaReportPath
+    ], { stdio: "inherit", timeout: 4 * 60 * 1000 });
+    qaPassed = true;
+  } catch (error) {
+    console.error("QA gates failed; retaining the QA report and render outputs for the Release.");
+    if (!fs.existsSync(qaReportPath) || fs.statSync(qaReportPath).size === 0) {
+      throw new Error("QA failed before creating qa-report.json; cannot publish incomplete evidence.");
+    }
+  }
 
   const outputs = {
     has_video: "true",
@@ -381,6 +295,8 @@ async function main() {
     video_path: videoPath,
     caption_path: captionPath,
     contact_sheet_path: contactSheetPath,
+    qa_report_path: qaReportPath,
+    qa_passed: qaPassed,
     has_voice_samples: "false"
   };
 
