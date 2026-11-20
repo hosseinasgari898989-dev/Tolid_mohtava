@@ -20,7 +20,7 @@ import "@fontsource/vazirmatn/900.css";
 
 import { VisualBackground } from "./backgrounds/NeonBackgrounds";
 import { LayoutRenderer } from "./kit/components.jsx";
-import { fitFontSize, KEY_CONTENT_AREA } from "./kit/layout-utils.js";
+import { fitFontSize, PRODUCTION_VISUAL_AREA, SUBTITLE_AREA } from "./kit/layout-utils.js";
 import {
   OUTRO_FRAMES,
   COVER_FADE_START_FRAME,
@@ -308,10 +308,10 @@ const SceneLayer = ({ scene, index, videoId, frameOverride }) => {
         <div
           style={{
             position: "absolute",
-            top: `${KEY_CONTENT_AREA.top}%`,
+            top: `${PRODUCTION_VISUAL_AREA.top}%`,
             left: 72,
             right: 72,
-            height: `${KEY_CONTENT_AREA.height}%`,
+            height: `${PRODUCTION_VISUAL_AREA.height}%`,
             minHeight: 400,
             display: "flex",
             justifyContent: "center",
@@ -372,10 +372,10 @@ const SceneSubtitles = ({ scenes, fps, hideAfterFrame, frameOverride }) => {
       dir="rtl"
       style={{
         position: "absolute",
-        top: "57%",
+        top: `${SUBTITLE_AREA.top}%`,
         left: 72,
         right: 72,
-        height: "15%",
+        height: `${SUBTITLE_AREA.height}%`,
         maxWidth: 936,
         margin: "0 auto",
         padding: "10px 24px",

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { measureTextFit, collectTextFitDiagnostics, isKeyContentAreaSafe, KEY_CONTENT_AREA, KEY_CONTENT_SAFE_AREA } from "../src/kit/layout-utils.js";
+import { measureTextFit, collectTextFitDiagnostics, isKeyContentAreaSafe, isProductionLayoutSafe, KEY_CONTENT_AREA, KEY_CONTENT_SAFE_AREA, PRODUCTION_VISUAL_AREA, SUBTITLE_AREA } from "../src/kit/layout-utils.js";
 import { validateSubtitleTimings } from "./content_bank.mjs";
 
 test("text fitting preserves the declared minimum for concise Persian headlines", () => {
@@ -44,4 +44,10 @@ test("key scene content remains inside the approved 12%-72% vertical safe area",
   assert.equal(isKeyContentAreaSafe(), true);
   assert.ok(KEY_CONTENT_AREA.top >= KEY_CONTENT_SAFE_AREA.top);
   assert.ok(KEY_CONTENT_AREA.bottom <= KEY_CONTENT_SAFE_AREA.bottom);
+});
+
+test("production visual content and subtitles are separated inside the 12%-72% safe area", () => {
+  assert.equal(isProductionLayoutSafe(), true);
+  assert.ok(PRODUCTION_VISUAL_AREA.bottom < SUBTITLE_AREA.top);
+  assert.ok(SUBTITLE_AREA.bottom <= KEY_CONTENT_SAFE_AREA.bottom);
 });

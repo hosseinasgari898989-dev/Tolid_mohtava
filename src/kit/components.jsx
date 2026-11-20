@@ -193,17 +193,19 @@ export const ComparisonBars = ({ a = {}, b = {}, title = "", frameOverride }) =>
   );
 };
 
-export const InfoCard = ({ title = "", body = "", icon = "sparkles", frameOverride }) => {
+export const InfoCard = ({ title = "", body = "", icon = "sparkles", frameOverride, compact = false }) => {
   const localFrame = useCurrentFrame();
   const frame = frameOverride ?? localFrame;
   const { fps } = useVideoConfig();
   const p = popIn(frame, fps, 4);
-  const fit = fitTextStyle(body, { width: 750, fontSize: 42, minFontSize: 38, maxLines: 4 });
+  const bodyWidth = compact ? 330 : 750;
+  const titleWidth = compact ? 210 : 650;
+  const fit = fitTextStyle(body, { width: bodyWidth, fontSize: 42, minFontSize: 38, maxLines: 4 });
   return (
-    <div style={{ ...glass, width: "100%", padding: "28px 32px", opacity: p, transform: "translateX(" + ((1 - p) * 60) + "px)" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, marginBottom: 22 }}>
+    <div style={{ ...glass, width: "100%", minWidth: 0, padding: compact ? "22px 20px" : "28px 32px", opacity: p, transform: "translateX(" + ((1 - p) * 60) + "px)" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: compact ? 12 : 20, marginBottom: compact ? 16 : 22 }}>
         <IconBadge icon={icon} size={140} frameOverride={frame} />
-        <div style={{ ...baseText, fontSize: fitFontSize(title, { width: 650, fontSize: 56, minFontSize: 48 }), fontWeight: 900, color: C.gold }}>{asDisplayText(title)}</div>
+        <div style={{ ...baseText, maxWidth: titleWidth, fontSize: fitFontSize(title, { width: titleWidth, fontSize: 56, minFontSize: 48 }), fontWeight: 900, color: C.gold }}>{asDisplayText(title)}</div>
       </div>
       <div style={{ ...baseText, ...fit, color: C.muted, margin: "0 auto", fontWeight: 600 }}>{asDisplayText(body)}</div>
     </div>
@@ -338,9 +340,13 @@ export const LayoutRenderer = ({ layout = "headline", data = {}, fallbackText = 
       return <ComparisonBars a={data.a || { label: "گزینه A" }} b={data.b || { label: "گزینه B" }} title={data.title || text} frameOverride={frameOverride} />;
     case "card":
       return data.orbit
-        ? <div style={{ display: "flex", flexDirection: "column", gap: 18, width: "100%" }}>
-            <OrbitDiagram label={data.orbitLabel || "مسیر تصویری"} frameOverride={frameOverride} />
-            <InfoCard title={data.title || text} body={data.body || ""} icon={data.icon || "sparkles"} frameOverride={frameOverride} />
+        ? <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 16, width: "100%", minWidth: 0 }}>
+            <div style={{ width: "48%", minWidth: 0 }}>
+              <OrbitDiagram label={data.orbitLabel || "مسیر تصویری"} frameOverride={frameOverride} />
+            </div>
+            <div style={{ width: "48%", minWidth: 0 }}>
+              <InfoCard title={data.title || text} body={data.body || ""} icon={data.icon || "sparkles"} frameOverride={frameOverride} compact />
+            </div>
           </div>
         : <InfoCard title={data.title || text} body={data.body || ""} icon={data.icon || "sparkles"} frameOverride={frameOverride} />;
     case "list":

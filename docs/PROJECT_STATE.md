@@ -62,7 +62,8 @@ Last updated: 2026-11-20 (hardening code committed; workflow renders pending)
 
 ## QA behavior
 
-- `scripts/qa.mjs` samples frames every 1.5 seconds and checks navy background, corners and edge strips, nonblank first frame, dimensions, fps, codec, duration, audio, loudness and true peak.
+- Production visual content occupies 31%-57%; word subtitles occupy 58%-72%, leaving a separation gap inside the approved 12%-72% safe region. The `kit-demo` showcase uses its own 31%-72% area because it has no story subtitles.
+- `scripts/qa.mjs` samples frames every 1.5 seconds and checks navy background, corners and edge strips, nonblank first frame, separate production/subtitle areas, dimensions, fps, codec, duration, audio, loudness and true peak.
 - Production profile additionally checks closing-line visibility, loop comparison, word timing, content-bank validity and text fit.
 - `kit-demo` is a showcase rather than a story video. Its QA report explicitly marks story-video CTA and first/last loop gates as `SKIP`; it still checks frame appearance, safe-area/layout fit, audio and loudness. Do not describe these skipped demo-only checks as passed.
 - A failed QA report is retained in the relevant Release before the Workflow is made to fail. A successful Release upload does not mean the QA gate passed.

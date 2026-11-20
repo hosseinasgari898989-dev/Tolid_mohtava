@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import { spawnSync } from "node:child_process";
 import { validateContentBank, validateSubtitleTimings } from "./content_bank.mjs";
-import { collectTextFitDiagnostics, isKeyContentAreaSafe, KEY_CONTENT_AREA, KEY_CONTENT_SAFE_AREA } from "../src/kit/layout-utils.js";
+import { collectTextFitDiagnostics, isKeyContentAreaSafe, isProductionLayoutSafe, KEY_CONTENT_AREA, KEY_CONTENT_SAFE_AREA, PRODUCTION_VISUAL_AREA, SUBTITLE_AREA } from "../src/kit/layout-utils.js";
 
 const PASS = "PASS";
 const FAIL = "FAIL";
@@ -203,6 +203,7 @@ function main() {
   const hookRatio = firstFrame.length === 270 * 480 * 3 ? visibleHookRatio(firstFrame) : 0;
   check("First frame contains visible hook/content", hookRatio >= 0.001, { brightAccentPixelRatio: hookRatio });
   check("Key content stays within the 12%-72% vertical safe area", isKeyContentAreaSafe(), { contentArea: KEY_CONTENT_AREA, safeArea: KEY_CONTENT_SAFE_AREA });
+  if (profile === "production") check("Production visual content and subtitles occupy separate safe-area regions", isProductionLayoutSafe(), { visualArea: PRODUCTION_VISUAL_AREA, subtitleArea: SUBTITLE_AREA, safeArea: KEY_CONTENT_SAFE_AREA });
 
   const props = cli.props && fs.existsSync(cli.props)
     ? JSON.parse(fs.readFileSync(cli.props, "utf8"))

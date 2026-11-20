@@ -75,12 +75,26 @@ export const fitTextStyle = (text, options = {}) => ({
 export const isValidLayout = layout => VIDEO_LAYOUTS.includes(layout);
 
 export const KEY_CONTENT_SAFE_AREA = Object.freeze({ top: 12, bottom: 72 });
+// The demo has no subtitles, so its larger showcase area can use the full safe region.
 export const KEY_CONTENT_AREA = Object.freeze({ top: 31, bottom: 72, height: 41 });
+// Production visual content and subtitles are separate, with a 1% gap between them.
+export const PRODUCTION_VISUAL_AREA = Object.freeze({ top: 31, bottom: 57, height: 26 });
+export const SUBTITLE_AREA = Object.freeze({ top: 58, bottom: 72, height: 14 });
 
 export function isKeyContentAreaSafe() {
   return KEY_CONTENT_AREA.top >= KEY_CONTENT_SAFE_AREA.top &&
     KEY_CONTENT_AREA.bottom <= KEY_CONTENT_SAFE_AREA.bottom &&
     KEY_CONTENT_AREA.height === KEY_CONTENT_AREA.bottom - KEY_CONTENT_AREA.top;
+}
+
+export function isProductionLayoutSafe() {
+  const visualIsSafe = PRODUCTION_VISUAL_AREA.top >= KEY_CONTENT_SAFE_AREA.top &&
+    PRODUCTION_VISUAL_AREA.bottom <= KEY_CONTENT_SAFE_AREA.bottom &&
+    PRODUCTION_VISUAL_AREA.height === PRODUCTION_VISUAL_AREA.bottom - PRODUCTION_VISUAL_AREA.top;
+  const subtitlesAreSafe = SUBTITLE_AREA.top >= KEY_CONTENT_SAFE_AREA.top &&
+    SUBTITLE_AREA.bottom <= KEY_CONTENT_SAFE_AREA.bottom &&
+    SUBTITLE_AREA.height === SUBTITLE_AREA.bottom - SUBTITLE_AREA.top;
+  return visualIsSafe && subtitlesAreSafe && PRODUCTION_VISUAL_AREA.bottom < SUBTITLE_AREA.top;
 }
 
 export const TEXT_ROLE_LIMITS = Object.freeze({
