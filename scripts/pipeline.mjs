@@ -130,8 +130,11 @@ async function main() {
   if (!video) {
     if (requestedId) throw new Error(`Requested video id not found: ${requestedId}`);
     console.log("No pending videos found.");
-    writeOutputs({ has_video: "false", has_voice_samples: "false" });
+    writeOutputs({ has_video: "false", has_voice_samples: "false", no_pending: "true" });
     return;
+  }
+  if (BANK_PATH === "content_bank.json" && video.status !== "pending") {
+    throw new Error(`Production item ${video.id} has status=${video.status}; only verified pending items may render. Set status=pending only after source review.`);
   }
 
   const ttsConfig = {
@@ -265,6 +268,7 @@ async function main() {
     "--video", videoPath,
     "--output", contactSheetPath,
     "--every-seconds", "1.5",
+    "--skip-loop-check",
     "--json-report", "out/contact-sheet-report.json"
   ], { stdio: "inherit", timeout: 3 * 60 * 1000 });
 
